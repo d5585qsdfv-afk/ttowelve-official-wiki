@@ -3,7 +3,7 @@ import { renderFavicon, renderPage } from './page.js';
 import { clientSource } from './client-asset.generated.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
-const CATEGORY_SET = new Set(['weapons', 'cards', 'jobs', 'emblems', 'enemies', 'other']);
+const CATEGORY_SET = new Set(['weapons', 'cards', 'medicines', 'jobs', 'emblems', 'enemies', 'other']);
 const ACCENT_SET = new Set(['lime', 'amber', 'rose', 'violet', 'ice', 'sky', 'red', 'teal']);
 
 function json(body, status = 200) {

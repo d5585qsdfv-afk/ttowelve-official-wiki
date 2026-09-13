@@ -1,4 +1,6 @@
 import { weaponEntries } from './weapons.generated.js';
+import { cardEntries } from './cards.generated.js';
+import { medicineEntries } from './medicines.generated.js';
 import { enemyEntries } from './enemies.generated.js';
 
 export const GAME_ID = 'ten-saviors';
@@ -78,70 +80,70 @@ const baseEntries = [
     id: 'card-muku-iruka', category: 'cards', title: 'ムクイルカ',
     subtitle: 'Attack｜チャンネル9｜水属性魔法', accent: 'sky', sortOrder: 10,
     summary: 'レベルに応じてD10系の水属性魔法攻撃を行う、基本攻撃カード。',
-    tags: ['武器カード', 'Attack', '水属性', 'CH 09'],
+    tags: ['カード', 'Attack', '水属性', 'CH 09'],
     body: 'チャンネル｜9\nロール｜Attack\nレベル1｜D10ダメージの単体水属性魔法攻撃。\nレベル2｜D10＋20ダメージの単体水属性魔法攻撃。\nレベル3｜D10＋40ダメージの単体水属性魔法攻撃。\nレベル4｜D10＋60ダメージの単体水属性魔法攻撃。'
   },
   {
     id: 'card-patapta-bomb', category: 'cards', title: 'ぱたぱたボム',
     subtitle: 'Attack｜セットで効果発動｜無属性イマジン', accent: 'red', sortOrder: 20,
     summary: '毎ターン開始時に敵全体へダメージを与え、レベル4では流血への追撃効果も得る。',
-    tags: ['武器カード', 'Attack', 'セット発動', '流血'],
+    tags: ['カード', 'Attack', 'セット発動', '流血'],
     body: '発動条件｜セットで効果発動\nレベル1｜毎ターン開始時、敵全体にD10の無属性イマジンダメージ。\nレベル2｜毎ターン開始時、敵全体にD10＋20の無属性イマジンダメージ。\nレベル3｜毎ターン開始時、敵全体にD10＋30の無属性イマジンダメージ。\nレベル4｜毎ターン開始時、敵全体にD10＋60の無属性イマジンダメージ。味方全員が「流血」を持つ敵へのダメージ1.5倍効果を獲得する。'
   },
   {
     id: 'card-yabusame-penguin', category: 'cards', title: 'やぶさめペンギン',
     subtitle: 'Attack｜チャンネル6｜氷属性物理', accent: 'ice', sortOrder: 30,
     summary: 'レベル上昇でD15系の氷属性物理攻撃が強化される単体アタッカー。',
-    tags: ['武器カード', 'Attack', '氷属性', 'CH 06'],
+    tags: ['カード', 'Attack', '氷属性', 'CH 06'],
     body: 'チャンネル｜6\nロール｜Attack\nレベル1｜D15ダメージの単体氷属性物理攻撃。\nレベル2｜D15＋25ダメージ。\nレベル3｜D15＋50ダメージ。\nレベル4｜D15＋75ダメージ。'
   },
   {
     id: 'card-cheer-sister', category: 'cards', title: 'チアシスター',
     subtitle: 'Support｜チャンネル8｜攻撃支援', accent: 'lime', sortOrder: 40,
     summary: '味方全員の攻撃威力を高め、レベル上昇で貫通値も支援するサポートカード。',
-    tags: ['武器カード', 'Support', '攻撃威力', '貫通値'],
+    tags: ['カード', 'Support', '攻撃威力', '貫通値'],
     body: 'チャンネル｜8\nレベル1｜味方全員の攻撃威力＋10％。\nレベル2｜味方全員の攻撃威力＋15％、貫通値＋10。\nレベル3｜味方全員の攻撃威力＋20％、貫通値＋20。'
   },
   {
     id: 'card-windman', category: 'cards', title: 'ウィンドマン',
     subtitle: 'Support｜チャンネル7｜回避・移動技支援', accent: 'teal', sortOrder: 50,
     summary: '味方全体の回避を上げ、レベルに応じて移動技の威力も強化する。',
-    tags: ['武器カード', 'Support', '回避', '移動技'],
+    tags: ['カード', 'Support', '回避', '移動技'],
     body: 'チャンネル｜7\nレベル1｜味方全体の回避＋5。\nレベル2｜味方全体の回避＋5、移動技の威力1.5倍。\nレベル3｜味方全体の回避＋5、移動技の威力3倍。'
   },
   {
     id: 'card-nise-jizou', category: 'cards', title: 'ニセジゾウ',
     subtitle: 'Support｜チャンネル8｜幸運状態', accent: 'amber', sortOrder: 60,
     summary: 'ハード成功をイクストリーム成功へ変換する「幸運」を付与する。',
-    tags: ['武器カード', 'Support', '幸運', 'イクストリーム'],
+    tags: ['カード', 'Support', '幸運', 'イクストリーム'],
     body: 'チャンネル｜8\nレベル1｜味方一体に「幸運」状態を付与する。\nレベル2｜味方全体に「幸運」状態を付与する。\nレベル3｜味方全体に「幸運II」状態を付与する。\n幸運｜「武器攻撃」と「ガード」に用いる技能のハード成功をイクストリーム成功に変換する。\n幸運II｜すべての行動に用いる技能のハード成功をイクストリーム成功に変換する。'
   },
   {
     id: 'card-philfly', category: 'cards', title: 'フィルフライ',
     subtitle: 'Health｜チャンネル9｜回復・装甲', accent: 'ice', sortOrder: 70,
     summary: '味方単体を回復し、上位レベルでは装甲も付与するヒールカード。',
-    tags: ['武器カード', 'Health', '回復', '装甲'],
+    tags: ['カード', 'Health', '回復', '装甲'],
     body: 'チャンネル｜9\nレベル1｜味方1名のHPを30％回復する。\nレベル2｜味方1名のHPを70％回復し、装甲を10％付与する。\nレベル3｜味方1名のHPを100％回復し、装甲を20％付与する。'
   },
   {
     id: 'card-tekkyu-baron', category: 'cards', title: 'テッキュウ男爵',
     subtitle: 'Attack｜チャンネル9｜貫通物理遠隔', accent: 'violet', sortOrder: 80,
     summary: 'レベルに応じて貫通値を伸ばし、武器攻撃相当の遠隔ダメージを与える。',
-    tags: ['武器カード', 'Attack', '物理遠隔', '貫通値'],
+    tags: ['カード', 'Attack', '物理遠隔', '貫通値'],
     body: 'チャンネル｜9\nレベル1｜単体に武器攻撃と同等の物理遠隔ダメージ。\nレベル2｜貫通値30。\nレベル3｜貫通値70。\nレベル4｜貫通値100。'
   },
   {
     id: 'card-iron-body', category: 'cards', title: 'アイアンボディ',
     subtitle: 'Support｜チャンネル6｜ガード段階強化', accent: 'amber', sortOrder: 90,
     summary: '味方一体のガード段階を強化し、上位レベルでは軽減率も上げる。',
-    tags: ['武器カード', 'Support', 'ガード', '鉄属性'],
+    tags: ['カード', 'Support', 'ガード', '鉄属性'],
     body: 'チャンネル｜6\nレベル1｜味方一体のガード段階を1段階強化する。\nレベル2｜さらにガード軽減率＋10％。\nレベル3｜さらにガード軽減率＋20％。\nレベル4｜さらにガード軽減率＋30％。'
   },
   {
     id: 'card-barrier-mage', category: 'cards', title: 'バリアメイジ',
     subtitle: 'Counter｜チャンネル7｜魔法反射', accent: 'sky', sortOrder: 100,
     summary: '魔法ダメージを無効化し、反射板のレベルに応じて反撃するカウンターカード。',
-    tags: ['武器カード', 'Counter', '魔法', '反射'],
+    tags: ['カード', 'Counter', '魔法', '反射'],
     body: 'チャンネル｜7\nレベル1｜味方一体に「反射板-魔法」を付与する。\nレベル2｜味方二体に付与する。\nレベル3｜味方全体に付与する。\nレベル4｜味方一体に「反射板-魔法II」を付与する。\n反射板-魔法｜受ける魔法ダメージを無効化し、半分のダメージを反射する。1ターン持続。\n反射板-魔法II｜受ける魔法ダメージを無効化し、自身の武器攻撃同等のダメージを反射する。1ターン持続。'
   },
   {
@@ -167,7 +169,12 @@ const baseEntries = [
   },
 ];
 
-export const defaultEntries = [...weaponEntries, ...baseEntries, ...enemyEntries].map((entry) => ({
+const allEntries = [...weaponEntries, ...cardEntries, ...medicineEntries, ...baseEntries, ...enemyEntries];
+const uniqueEntries = allEntries.filter((entry, index, source) =>
+  index === source.findIndex((candidate) => candidate.category === entry.category && candidate.title === entry.title)
+);
+
+export const defaultEntries = uniqueEntries.map((entry) => ({
   ...entry,
   game: GAME_ID,
   revision: 0,
