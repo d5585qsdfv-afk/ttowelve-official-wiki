@@ -10,9 +10,11 @@ await writeFile(
 );
 await rm(dist, { recursive: true, force: true });
 await mkdir(resolve(dist, 'server'), { recursive: true });
+await mkdir(resolve(dist, 'out'), { recursive: true });
 await mkdir(resolve(dist, '.openai'), { recursive: true });
 await mkdir(resolve(dist, '.openai', 'drizzle'), { recursive: true });
 await cp(resolve(root, 'src'), resolve(dist, 'server'), { recursive: true });
+await cp(resolve(root, 'public'), resolve(dist, 'out'), { recursive: true });
 await cp(resolve(root, 'drizzle'), resolve(dist, '.openai', 'drizzle'), { recursive: true });
 const hosting = JSON.parse(await readFile(resolve(root, '.openai', 'hosting.json'), 'utf8'));
 await writeFile(resolve(dist, '.openai', 'hosting.json'), JSON.stringify(hosting, null, 2) + '\n');
