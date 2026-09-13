@@ -1,4 +1,5 @@
 import { weaponEntries } from './weapons.generated.js';
+import { enemyEntries } from './enemies.generated.js';
 
 export const GAME_ID = 'ten-saviors';
 
@@ -164,16 +165,9 @@ const baseEntries = [
     tags: ['アップデート', 'メダルラリー', '蛇銭貨', '報酬'],
     body: 'メダルラリー｜章ごとに報酬を分け、狙った報酬を優先して獲得できるよう調整。メダル1枚あたりのゲーム内通貨は6000円。第五章、最終章、最終章番外編1・2の項目も追加。\n温泉宿生万蛇魅｜週に一度まで施設を手伝い、繁盛度に応じた収益を「蛇銭貨」として受け取る。蛇銭貨は幸運チケット、クイックチケット、ドラコニックハートなどと交換できる。\n聖光戦記解読録｜Bright&Storyクラス専用の「リミットブレイク」を解放する高難度コンテンツ。完全クリアできなくても一定量の報酬を受け取れる。\n交換コード「命の遺志の答え」｜ゲーム内通貨120000円、ショップポイント1200、VUNDギア12個、クイックチケット12枚、蛇銭貨120枚など。'
   },
-  {
-    id: 'enemy-coming-soon', category: 'enemies', title: '敵図鑑＆攻略情報',
-    subtitle: '攻略情報募集中', accent: 'red', sortOrder: 10,
-    summary: '敵の能力、弱点、行動パターン、攻略の要点をまとめます。',
-    tags: ['敵', '攻略', '準備中'],
-    body: '敵データを登録すると、能力情報と攻略メモを一つの詳細画面で閲覧できます。'
-  }
 ];
 
-export const defaultEntries = [...weaponEntries, ...baseEntries].map((entry) => ({
+export const defaultEntries = [...weaponEntries, ...baseEntries, ...enemyEntries].map((entry) => ({
   ...entry,
   game: GAME_ID,
   revision: 0,
