@@ -1,0 +1,42 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "3d4ad21e-b887-4c50-a48e-432430b14b61",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "entries": {
+      "name": "entries",
+      "columns": {
+        "id": { "name": "id", "type": "text", "primaryKey": true, "notNull": true, "autoincrement": false },
+        "game": { "name": "game", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "category": { "name": "category", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "title": { "name": "title", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "subtitle": { "name": "subtitle", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "''" },
+        "summary": { "name": "summary", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "''" },
+        "body": { "name": "body", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "''" },
+        "tags_json": { "name": "tags_json", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "'[]'" },
+        "accent": { "name": "accent", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "'lime'" },
+        "sort_order": { "name": "sort_order", "type": "integer", "primaryKey": false, "notNull": true, "autoincrement": false, "default": 0 },
+        "revision": { "name": "revision", "type": "integer", "primaryKey": false, "notNull": true, "autoincrement": false, "default": 1 },
+        "is_deleted": { "name": "is_deleted", "type": "integer", "primaryKey": false, "notNull": true, "autoincrement": false, "default": 0 },
+        "updated_at": { "name": "updated_at", "type": "integer", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "updated_by": { "name": "updated_by", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "''" }
+      },
+      "indexes": {
+        "entries_game_category_idx": {
+          "name": "entries_game_category_idx",
+          "columns": ["game", "category", "sort_order"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": { "schemas": {}, "tables": {}, "columns": {} },
+  "internal": { "indexes": {} }
+}

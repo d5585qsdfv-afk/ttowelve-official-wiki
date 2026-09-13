@@ -14,6 +14,6 @@ CREATE TABLE IF NOT EXISTS entries (
   updated_at INTEGER NOT NULL,
   updated_by TEXT NOT NULL DEFAULT ''
 );
-
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS entries_game_category_idx
   ON entries (game, category, sort_order);
