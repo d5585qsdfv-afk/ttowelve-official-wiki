@@ -1,0 +1,10 @@
+{
+  "name": "ttowelve-official-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/preview.mjs"
+  }
+}
