@@ -3,6 +3,9 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
+    "build:site": "node scripts/build.mjs",
+    "dev:site": "node scripts/preview.mjs",
+    "test:images": "node --test scripts/image-tests.mjs",
     "dev": "next dev",
     "build": "next build",
     "typecheck": "tsc --noEmit",

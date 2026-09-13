@@ -1,5 +1,5 @@
 import http from 'node:http';
-import worker from '../src/index.js';
+import worker from '../dist/server/index.js';
 
 const rows = new Map();
 const db = {

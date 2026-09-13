@@ -171,7 +171,8 @@ const baseEntries = [
 
 const allEntries = [...weaponEntries, ...cardEntries, ...medicineEntries, ...baseEntries, ...enemyEntries];
 const uniqueEntries = allEntries.filter((entry, index, source) =>
-  index === source.findIndex((candidate) => candidate.category === entry.category && candidate.title === entry.title)
+  index === source.findIndex((candidate) => candidate.category === entry.category &&
+    (entry.category === 'enemies' ? candidate.id === entry.id : candidate.title === entry.title))
 );
 
 export const defaultEntries = uniqueEntries.map((entry) => ({

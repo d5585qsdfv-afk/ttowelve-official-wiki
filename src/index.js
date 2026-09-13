@@ -1,6 +1,8 @@
 import { defaultEntries } from './data.js';
 import { renderFavicon, renderPage } from './page.js';
 import { clientSource } from './client-asset.generated.js';
+import { assets } from './assets.generated.js';
+import { updateEnemyBody } from './entry-metadata.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const CATEGORY_SET = new Set(['weapons', 'cards', 'medicines', 'jobs', 'emblems', 'enemies', 'other']);
@@ -64,6 +66,13 @@ async function saveEntry(request, env) {
     body: cleanText(input.body, 6000), tags: Array.isArray(input.tags) ? input.tags.map(x => cleanText(x, 40)).filter(Boolean).slice(0, 12) : [],
     accent, sortOrder: existing ? 0 : now, revision: revision + 1, updatedAt: now, source: 'クラウド編集'
   };
+  if (category === 'enemies' && input.enemyClass !== undefined) {
+    entry.body = updateEnemyBody(entry.body, {
+      classification: cleanText(input.enemyClass, 40),
+      chapter: cleanText(input.enemyChapter, 100),
+      location: cleanText(input.enemyLocation, 120),
+    });
+  }
   await env.DB.prepare(`INSERT INTO entries (id, game, category, title, subtitle, summary, body, tags_json, accent, sort_order, revision, is_deleted, updated_at, updated_by)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
     ON CONFLICT(id) DO UPDATE SET category=excluded.category,title=excluded.title,subtitle=excluded.subtitle,summary=excluded.summary,body=excluded.body,tags_json=excluded.tags_json,accent=excluded.accent,revision=excluded.revision,is_deleted=0,updated_at=excluded.updated_at,updated_by=excluded.updated_by`)
@@ -73,8 +82,15 @@ async function saveEntry(request, env) {
 
 async function handle(request, env) {
   const url = new URL(request.url);
+  const asset = Object.hasOwn(assets, url.pathname) ? assets[url.pathname] : null;
+  if (asset) {
+    if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 });
+    const bytes = request.method === 'HEAD' ? null : Uint8Array.from(atob(asset.base64), c => c.charCodeAt(0));
+    return new Response(bytes, { headers: { 'content-type': asset.type, 'cache-control': 'public, max-age=3600', 'x-content-type-options': 'nosniff' } });
+  }
+  if (url.pathname.startsWith('/assets/')) return new Response('Image not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8', 'x-content-type-options': 'nosniff' } });
   if (url.pathname === '/favicon.svg') return new Response(renderFavicon(), { headers: { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=86400' } });
-  if (url.pathname === '/app.js') return new Response(clientSource, { headers: { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'public, max-age=300' } });
+  if (url.pathname === '/app.js') return new Response(request.method === 'HEAD' ? null : clientSource, { headers: { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' } });
   if (url.pathname === '/api/entries' && request.method === 'GET') {
     try { return json({ entries: await listEntries(env), authenticated: !!userFrom(request) }); }
     catch (error) { return json({ error: '図鑑情報を読み込めません。', detail: String(error?.message || '') }, 500); }
