@@ -1,11 +1,13 @@
-# TTwowelve Official Archive
+# TTwowelve 公式ゲームWiki
 
-「十の救現主」を中心としたTTowelve公式Webアプリです。作品選択、図鑑検索、詳細表示、管理者向けクラウド編集を一つの画面にまとめています。
+Next.js App Router・TypeScript・Tailwind CSSで構築した、複数ゲーム対応のデータ駆動Wikiです。現在は「十の救現主」のみ閲覧機能を実装し、内容はすべてUI確認用の架空データです。
 
-## 現在の収録範囲
+## 開発
 
-- 十の救現主：武器種、武器カード・薬、ジョブ、紋章、敵＆攻略、その他情報
-- ソレイユの伝承：エナルゴス戦記：準備中
-- イドレット ～競技性アライアンスゲーム～：準備中
+- `npm run dev`: 開発サーバー
+- `npm run typecheck`: 型チェック
+- `npm run lint`: ESLint
+- `npm run build`: 静的サイト生成（`out/`）
+- `npm run regression`: 生成ページ・内部リンク・主要表示の構造確認
 
-管理画面から保存した内容はD1データベースへ記録され、改訂番号によって別端末からの同時更新を検知します。
+データは `src/data/`、型は `src/types/wiki.ts`、検索ロジックは `src/lib/search.ts` に分離しています。将来DBやCMSへ移行するときは `src/data/index.ts` の取得境界をRepository/API実装へ差し替える想定です。

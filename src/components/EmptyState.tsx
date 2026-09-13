@@ -1,0 +1,1 @@
+export function EmptyState({ title="該当する情報がありません", description="検索語や絞り込み条件を変更してください。" }:{ title?:string; description?:string }) { return <div className="empty-state" role="status"><strong>{title}</strong><p>{description}</p></div>; }
