@@ -33,17 +33,27 @@ const REVERSE_TITLES = new Set([
   'バルカローラ', '梁月', 'エル・アレフ', 'ノーティカ', '37', 'ルブシカ', 'J',
 ]);
 
-// These are the eight standalone characters requested for Bright&Story.
-// 想依華&子龍 is a composite card-oriented record, not a standalone character.
+// These are the eight characters explicitly assigned to Bright&Story in the
+// latest class roster. Keep this list ahead of source-based game detection so
+// the class assignment follows the roster rather than the imported origin.
 const BRIGHT_STORY_TITLES = new Set([
-  '未草かなみ', '裕蓮 ふよう', '天泣 鯆晴', '二本滝 鬼才',
-  'ライゼル・ハーク', 'L-00', '桃次郎', '日川 林檎',
+  'サイゼル・エルケトラ', 'クレガ', 'マリス・ディガー', 'テオ・ベルナー',
+  'エリザ・ナダトール', 'リエル', 'AF-G2(アネッサ・フレデンス)', 'トウル・マース',
 ]);
 
-// Legacy/base records and composite records are kept in the archive, but are not
-// counted as Bright&Story characters. They use the existing Adventure bucket.
+// These characters were explicitly identified as Adventure in the latest
+// roster. The source panel for ドラコニックウェポン is an Iris job and is
+// therefore handled by UNCLASSIFIED_TITLES below.
 const ADVENTURE_TITLES = new Set([
-  'イリス', 'ドラコニックウェポン(伸剣×伸剣)', '想依華&子龍',
+  '天泣 鯆晴', '二本滝 鬼才', 'ライゼル・ハーク', 'L-00',
+  '想依華&子龍', '桃次郎', '日川 林檎',
+]);
+
+// These records are intentionally retained in the archive without a class.
+// In particular, the Dragonic Weapon panel belongs to Iris rather than being
+// a separate Adventure character.
+const UNCLASSIFIED_TITLES = new Set([
+  '未草かなみ', '裕蓮 ふよう', 'イリス', 'ドラコニックウェポン(伸剣×伸剣)',
 ]);
 
 const EXTERNAL_GAME_SOURCE = 'BRAVELY DEFAULT II／ゼンレスゾーンゼロ／ペルソナ5:The Phantom X／METAL GEAR RISING:REVENGEANCE／アサシンクリードII';
@@ -72,6 +82,7 @@ export function canonicalJobClass(entry) {
   const source = sourceClass(entry);
 
   if (entry.subtitle?.startsWith('StarRail｜') || source.startsWith('装備・VUND・クラス「StarRail」')) return 'StarRail';
+  if (UNCLASSIFIED_TITLES.has(title)) return '';
   if (ADVENTURE_TITLES.has(title)) return 'Adventure';
   if (BRIGHT_STORY_TITLES.has(title)) return 'Bright&Story';
   if (WIKI_JOB_CLASSES.has(title)) return WIKI_JOB_CLASSES.get(title);
@@ -79,7 +90,6 @@ export function canonicalJobClass(entry) {
   if (source === EXTERNAL_GAME_SOURCE || title === '星見雅') return 'Mixing';
   if (source === TEST_GAMERS_SOURCE) return 'Gamers';
   if (source === 'Death Reunion~五つの禁術~') return 'Sun';
-  if (source === '天泣のルビィ／牙鬼~Blood Conflict~／偽童話 桃次郎伝説／ピリヘリカ') return 'Bright&Story';
   if (source === 'Little Saver') return 'Saver';
   if (source === 'Breaking Night Mirror') return 'Mirror';
   if (source === 'Couse of Collapse') return 'Collapse';
