@@ -1,0 +1,2 @@
+export type SortKey = "name"|"rarity"|"added"|"updated";
+export function SortControl({ value,onChange }:{value:SortKey;onChange:(value:SortKey)=>void}) { return <label><span className="sr-only">並び順</span><select aria-label="並び順" value={value} onChange={(event)=>onChange(event.target.value as SortKey)}><option value="name">名前順</option><option value="rarity">レアリティ順</option><option value="added">追加順</option><option value="updated">更新順</option></select></label>; }
