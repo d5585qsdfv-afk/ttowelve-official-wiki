@@ -147,10 +147,25 @@ const uniqueEntries = allEntries.filter((entry, index, source) =>
 function cleanCatalogText(value) {
   if (typeof value !== 'string') return value;
   return value
-    .replaceAll('ジョブ本文を原文のまま収録', 'ジョブ本文')
-    .replaceAll('紋章本文を原文のまま収録', '紋章本文')
-    .replaceAll('リンクリング本文を原文のまま収録', 'リンクリング本文')
-    .replaceAll('分類資料を原文のまま収録', '分類資料')
+    .replaceAll('紋章｜CCFOLIA原文', '現像元')
+    .replaceAll('リンクリング｜CCFOLIA原文', '現像元')
+    .replaceAll('CCFOLIA原文', '現像元')
+    .replaceAll('ジョブ本文を原文のまま収録｜', '')
+    .replaceAll('紋章本文を原文のまま収録｜', '')
+    .replaceAll('リンクリング本文を原文のまま収録｜', '')
+    .replaceAll('分類資料を原文のまま収録｜', '')
+    .replaceAll('ジョブ本文を原文のまま収録', '')
+    .replaceAll('紋章本文を原文のまま収録', '')
+    .replaceAll('リンクリング本文を原文のまま収録', '')
+    .replaceAll('分類資料を原文のまま収録', '')
+    .replaceAll('ジョブ本文｜', '')
+    .replaceAll('紋章本文｜', '')
+    .replaceAll('リンクリング本文｜', '')
+    .replaceAll('分類資料｜', '')
+    .replaceAll('ジョブ本文', '')
+    .replaceAll('紋章本文', '')
+    .replaceAll('リンクリング本文', '')
+    .replaceAll('分類資料', '')
     .replaceAll('原文のまま収録', '')
     .replaceAll(EXTERNAL_GAME_SOURCE, 'Mixing');
 }

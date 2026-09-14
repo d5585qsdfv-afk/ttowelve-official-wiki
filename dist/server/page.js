@@ -56,7 +56,7 @@ export function renderPage() {
     <section class="archive hidden" id="archive" aria-labelledby="archiveTitle">
       <div class="archive-heading">
         <div class="archive-intro"><button class="back" data-action="home">← 映画館ロビーへ</button><div class="eyebrow">SCREEN 01 / THE TEN SAVIORS</div><h1 id="archiveTitle">十の救現主</h1><p class="archive-description">現実と空想が交わる、その先へ。</p><div class="archive-subline"><span>WORLD ARCHIVE</span><span>属性 × 攻撃分類</span><span>状態異常 × 蓄積</span></div></div>
-        <div class="archive-branding"><div class="archive-keyvisual"><img src="/assets/ten-saviors.webp" alt="金と銀の光、翼と円環が交わる十の救現主のキービジュアル"></div><div class="game-logo"><img src="/assets/ten-saviors-logo.png" alt="十の救現主 ロゴ"></div></div>
+        <div class="archive-branding"><div class="archive-keyvisual"><img src="/assets/ten-saviors.webp" alt="金と銀の光、翼と円環が交わる十の救現主のキービジュアル"></div><div class="game-logo"><img src="/assets/ten-saviors-logo.webp" alt="十の救現主 ロゴ"></div></div>
       </div>
 
       <nav class="categories" aria-label="図鑑カテゴリー">
