@@ -55,7 +55,7 @@ const UNCLASSIFIED_TITLES = new Set([
   '未草かなみ', '裕蓮 ふよう', 'イリス',
 ]);
 
-const EXTERNAL_GAME_SOURCE = 'BRAVELY DEFAULT II／ゼンレスゾーンゼロ／ペルソナ5:The Phantom X／METAL GEAR RISING:REVENGEANCE／アサシンクリードII';
+export const EXTERNAL_GAME_SOURCE = 'BRAVELY DEFAULT II／ゼンレスゾーンゼロ／ペルソナ5:The Phantom X／METAL GEAR RISING:REVENGEANCE／アサシンクリードII';
 const TEST_GAMERS_SOURCE = 'テストゲーマーズ／テストゲーマーズ~Memories~／テストゲーマーズ2／テストゲーマーズ0／テストゲーマーズ3';
 
 const VUND_BOSS_CLASSES = new Map([
@@ -86,7 +86,7 @@ export function canonicalJobClass(entry) {
   if (BRIGHT_STORY_TITLES.has(title)) return 'Bright&Story';
   if (WIKI_JOB_CLASSES.has(title)) return WIKI_JOB_CLASSES.get(title);
   if (source === 'リバース:1999' || REVERSE_TITLES.has(title)) return 'Reverse';
-  if (source === EXTERNAL_GAME_SOURCE || title === '星見雅') return 'Mixing';
+  if (source === EXTERNAL_GAME_SOURCE || source === 'Mixing' || title === '星見雅') return 'Mixing';
   if (source === TEST_GAMERS_SOURCE) return 'Gamers';
   if (source === 'Death Reunion~五つの禁術~') return 'Sun';
   if (source === 'Little Saver') return 'Saver';

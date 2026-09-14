@@ -4,7 +4,7 @@ import { medicineEntries } from './medicines.generated.js';
 import { enemyEntries } from './enemies.generated.js';
 import { starRailJobEntries, starRailBossEntries } from './starrail.generated.js';
 import { ccfoliaPanelEntries } from './ccfolia.panels.generated.js';
-import { canonicalJobClass, vundClassForEntry } from './vund-classes.js';
+import { canonicalJobClass, EXTERNAL_GAME_SOURCE, vundClassForEntry } from './vund-classes.js';
 
 export const GAME_ID = 'ten-saviors';
 
@@ -143,11 +143,46 @@ const uniqueEntries = allEntries.filter((entry, index, source) =>
     (entry.category === 'enemies' || entry.id.startsWith('ccfolia-screen-panel-') ? candidate.id === entry.id : candidate.title === entry.title))
 );
 
-export const defaultEntries = uniqueEntries.map((entry) => ({
-  ...entry,
-  ...(entry.category === 'jobs' ? { characterClass: canonicalJobClass(entry) || undefined } : {}),
-  ...(vundClassForEntry(entry) ? { vundClass: vundClassForEntry(entry) } : {}),
-  game: GAME_ID,
-  revision: 0,
-  source: entry.source || '初期収録'
-}));
+function cleanCatalogText(value) {
+  if (typeof value !== 'string') return value;
+  return value
+    .replaceAll('ジョブ本文を原文のまま収録', 'ジョブ本文')
+    .replaceAll('紋章本文を原文のまま収録', '紋章本文')
+    .replaceAll('リンクリング本文を原文のまま収録', 'リンクリング本文')
+    .replaceAll('分類資料を原文のまま収録', '分類資料')
+    .replaceAll('原文のまま収録', '')
+    .replaceAll(EXTERNAL_GAME_SOURCE, 'Mixing');
+}
+
+function cleanCatalogEntry(value) {
+  if (typeof value === 'string') return cleanCatalogText(value);
+  if (Array.isArray(value)) return value.map(cleanCatalogEntry);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cleanCatalogEntry(item)]));
+  }
+  return value;
+}
+
+function prepareCatalogEntry(entry) {
+  const characterClass = entry.category === 'jobs' ? canonicalJobClass(entry) : '';
+  const prepared = {
+    ...entry,
+    ...(entry.category === 'jobs' ? { characterClass: characterClass || undefined } : {}),
+    ...(vundClassForEntry(entry) ? { vundClass: vundClassForEntry(entry) } : {}),
+    game: GAME_ID,
+    revision: 0,
+    source: entry.source || '初期収録',
+  };
+
+  if (entry.category === 'jobs') {
+    const classLabel = characterClass || 'クラス未確定';
+    const originalSource = String(entry.characterClass || entry.subtitle?.split('｜')[1] || '').trim();
+    if (prepared.subtitle?.startsWith('ジョブ｜')) prepared.subtitle = `ジョブ｜${classLabel}`;
+    if (prepared.summary?.startsWith('ジョブ本文')) prepared.summary = `ジョブ本文｜${classLabel}`;
+    if (Array.isArray(prepared.tags)) prepared.tags = prepared.tags.map((tag) => tag === originalSource ? classLabel : tag);
+  }
+
+  return prepared;
+}
+
+export const defaultEntries = uniqueEntries.map(prepareCatalogEntry).map(cleanCatalogEntry);
