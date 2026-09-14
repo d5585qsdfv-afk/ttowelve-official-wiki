@@ -3,6 +3,7 @@ import { renderFavicon, renderPage } from './page.js';
 import { clientSource } from './client-asset.generated.js';
 import { assets } from './assets.generated.js';
 import { normalizeEnemyEntry, updateEnemyBody } from './entry-metadata.js';
+import { normalizeWeaponEntry } from './weapon-metadata.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const CATEGORY_SET = new Set(['weapons', 'weaponItems', 'cards', 'medicines', 'jobs', 'emblems', 'rings', 'enemies', 'other']);
@@ -38,7 +39,10 @@ function toEntry(row) {
 async function listEntries(env) {
   if (!env.DB) return defaultEntries;
   const result = await env.DB.prepare('SELECT * FROM entries WHERE is_deleted = 0 ORDER BY sort_order, title').all();
-  const stored = new Map((result.results || []).map(row => [row.id, normalizeEnemyEntry(toEntry(row))]));
+  const stored = new Map((result.results || []).map(row => {
+    const entry = normalizeWeaponEntry(normalizeEnemyEntry(toEntry(row)));
+    return [row.id, entry];
+  }));
   for (const entry of defaultEntries) if (!stored.has(entry.id)) stored.set(entry.id, entry);
   return [...stored.values()];
 }
@@ -73,7 +77,7 @@ async function saveEntry(request, env) {
       location: cleanText(input.enemyLocation, 120),
     });
   }
-  const normalizedEntry = normalizeEnemyEntry(entry);
+  const normalizedEntry = normalizeWeaponEntry(normalizeEnemyEntry(entry));
   await env.DB.prepare(`INSERT INTO entries (id, game, category, title, subtitle, summary, body, tags_json, accent, sort_order, revision, is_deleted, updated_at, updated_by)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
     ON CONFLICT(id) DO UPDATE SET category=excluded.category,title=excluded.title,subtitle=excluded.subtitle,summary=excluded.summary,body=excluded.body,tags_json=excluded.tags_json,accent=excluded.accent,revision=excluded.revision,is_deleted=0,updated_at=excluded.updated_at,updated_by=excluded.updated_by`)

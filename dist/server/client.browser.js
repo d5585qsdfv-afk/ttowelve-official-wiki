@@ -1,7 +1,8 @@
 import { enemyMetadata, normalizeEnemyEntry, updateEnemyBody } from '/entry-metadata.js';
+import { normalizeWeaponEntry, weaponDisplayMetadata } from '/weapon-metadata.js';
 import { decorateEntry, matchesTags, searchEntry } from '/tagging.js';
 const initial=window.__INITIAL_ENTRIES__||[];
-const prepareEntry=entry=>decorateEntry(normalizeEnemyEntry(entry));
+const prepareEntry=entry=>decorateEntry(normalizeWeaponEntry(normalizeEnemyEntry(entry)));
 let entries=initial.map(prepareEntry),activeCategory='all',currentEntry=null;
 let selectedTags=new Set();
 const FAVORITE_TAGS_KEY='ttowelve.favorite-tags';
@@ -52,7 +53,7 @@ function compactDamage(value=''){const values=value.split('/').map(item=>item.tr
 function weaponMetadata(entry){
   const parts=String(entry.subtitle||'').split('｜').map(value=>value.trim()).filter(Boolean),body=String(entry.body||'');
   const field=label=>(body.match(new RegExp('^'+label+'[｜|：:]\\s*(.*)$','m'))||[])[1]?.trim()||'';
-  const individual=entry.category==='weaponItems'; return {tacticalType:individual?(parts[1]||'未分類'):(parts[0]||'—'),type:individual?(parts[2]||'属性未設定'):(parts[1]||'未分類'),classification:individual?'個別武器｜効果本文は全文収録':(field('基本分類')||parts.slice(2).join('、')||'未設定'),damage:compactDamage(field('基礎ダメージ')),multiplier:(body.match(/属性倍率\s*([０-９0-9.]+倍)/)||[])[1]||'—',individual};
+  const individual=entry.category==='weaponItems',display=weaponDisplayMetadata(entry); return {tacticalType:individual?display.weaponType:(parts[0]||'—'),type:individual?display.attribute:(parts[1]||'未分類'),classification:individual?'個別武器｜効果本文は全文収録':(field('基本分類')||parts.slice(2).join('、')||'未設定'),damage:individual?display.base:compactDamage(field('基礎ダメージ')),multiplier:(body.match(/属性倍率\s*([０-９0-9.]+倍)/)||[])[1]||'—',individual};
 }
 function enemyCardMetadata(entry){
   const body=String(entry.body||''),base=enemyMetadata(entry),lines=body.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
