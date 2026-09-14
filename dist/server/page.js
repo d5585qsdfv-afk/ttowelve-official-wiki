@@ -60,14 +60,14 @@ export function renderPage() {
       </div>
 
       <nav class="categories" aria-label="図鑑カテゴリー">
-        <button class="category active" data-category="all"><b>総覧</b><small id="countAll">0</small></button>
-        <button class="category" data-category="weapons"><b>武器種</b><small>図鑑</small></button>
-        <button class="category" data-category="cards"><b>カード</b><small>図鑑</small></button>
-        <button class="category" data-category="medicines"><b>薬</b><small>図鑑</small></button>
-        <button class="category" data-category="jobs"><b>ジョブ</b><small>図鑑</small></button>
-        <button class="category" data-category="emblems"><b>紋章</b><small>図鑑</small></button>
-        <button class="category" data-category="enemies"><b>敵＆攻略</b><small>情報</small></button>
-        <button class="category" data-category="other"><b>戦闘・報酬</b><small>ルール／世界</small></button>
+        <button class="category active" data-category="all" aria-pressed="true"><b>総覧</b><small id="countAll">0</small></button>
+        <button class="category" data-category="weapons" aria-pressed="false"><b>武器種</b><small>図鑑</small></button>
+        <button class="category" data-category="cards" aria-pressed="false"><b>カード</b><small>図鑑</small></button>
+        <button class="category" data-category="medicines" aria-pressed="false"><b>薬</b><small>図鑑</small></button>
+        <button class="category" data-category="jobs" aria-pressed="false"><b>ジョブ</b><small>図鑑</small></button>
+        <button class="category" data-category="emblems" aria-pressed="false"><b>紋章</b><small>図鑑</small></button>
+        <button class="category" data-category="enemies" aria-pressed="false"><b>敵＆攻略</b><small>情報</small></button>
+        <button class="category" data-category="other" aria-pressed="false"><b>戦闘・報酬</b><small>ルール／世界</small></button>
       </nav>
 
       <div class="tool-row">
