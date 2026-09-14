@@ -2,7 +2,7 @@ import { enemyMetadata, normalizeEnemyEntry, updateEnemyBody } from '/entry-meta
 import { normalizeWeaponEntry, weaponDisplayMetadata } from '/weapon-metadata.js';
 import { decorateEntry, matchesTags, searchEntry } from '/tagging.js';
 import { MAX_PINNED_ENTRIES, normalizePinnedIds, pinnedEntries, togglePinnedIds } from '/pin-state.js';
-import { currentSession, currentUser, isSupabaseConfigured, signIn, signOut, signUp, submitWikiProposal } from '/supabase-bridge.js';
+import { authHeaders, currentSession, currentUser, isSupabaseConfigured, signIn, signOut, signUp, submitWikiProposal } from '/supabase-bridge.js';
 const initial=window.__INITIAL_ENTRIES__||[];
 const prepareEntry=entry=>decorateEntry(normalizeWeaponEntry(normalizeEnemyEntry(entry)));
 let entries=initial.map(prepareEntry),activeCategory='all',currentEntry=null;
@@ -190,7 +190,7 @@ $('#editorForm').addEventListener('submit',async event=>{
   if(body.category==='enemies'){body.enemyClass=fd.get('enemyClass');body.enemyChapter=fd.get('enemyChapter');body.enemyLocation=fd.get('enemyLocation');body.body=updateEnemyBody(body.body,{classification:body.enemyClass,chapter:body.enemyChapter,location:body.enemyLocation})}
   const submit=f.querySelector('[type="submit"]');submit.disabled=true;$('#formMessage').textContent='保存しています…';
   try{
-    const response=await fetch('/api/entries',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),data=await response.json();
+    const response=await fetch('/api/entries',{method:'POST',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify(body)}),data=await response.json();
     if(response.status===409){await load();const latest=entries.find(x=>x.id===body.id);if(latest)openEditor(latest);$('#formMessage').textContent='別の端末で更新されています。最新の内容を表示しました。編集内容を確認して保存してください。';return}
     if(!response.ok)throw new Error(data.error||'保存できませんでした');
     entries=entries.filter(x=>x.id!==data.entry.id).concat(prepareEntry(data.entry));populateFilters();render();$('#syncState').classList.add('ready');$('#editorDialog').close();

@@ -82,6 +82,13 @@ export async function getSession() {
   return session;
 }
 
+export async function authHeaders(headers = {}) {
+  await refreshIfNeeded();
+  const result = new Headers(headers);
+  if (session?.access_token) result.set('Authorization', `Bearer ${session.access_token}`);
+  return result;
+}
+
 async function currentRole() {
   const role = await request('/rest/v1/rpc/current_role', { method: 'POST', body: '{}' });
   return typeof role === 'string' ? role : 'user';
