@@ -27,4 +27,36 @@ dialog{border:0;background:transparent;color:var(--ink);padding:0}dialog::backdr
 @media(max-width:620px){.topbar{height:60px}.brand-logo{width:54px;height:38px}.archive{padding-top:.75rem}.archive-heading{min-height:285px;padding:1.15rem}.categories{margin:.75rem 0}.category{min-height:54px;flex-basis:86px}.tool-row{gap:.45rem}.search input{padding:.58rem 0}.database-filters,.enemy-filters{padding:.65rem;gap:.5rem}.entry{padding:.85rem .9rem .85rem 1rem}.entry h2{font-size:1.2rem;margin:.65rem 0 .2rem}.summary{font-size:.86rem;line-height:1.6}.weapon-entry,.enemy-entry{min-height:0}.entry-stats div{padding:.38rem .48rem}.entry-stats dt{font-size:.65rem}.entry-stats dd{font-size:.75rem}.entry-classification,.enemy-action{font-size:.75rem}.affinity{font-size:.72rem}}
 .categories{position:sticky;top:66px;z-index:12;background:#0c1421f5;backdrop-filter:blur(12px)}.tool-row{position:sticky;top:124px;z-index:11;padding-block:.4rem;background:linear-gradient(#080b12f5,#080b12e8 80%,transparent)}.archive-heading{min-height:235px}.weapon-type-badge{font-size:.72rem}.entry-stats dt{font-size:.68rem}
 @media(max-width:620px){.categories{top:60px}.tool-row{top:114px;padding-block:.45rem}.archive-heading{min-height:285px}.entry-media{height:122px;margin:-.85rem -.9rem .65rem -1rem}.detail-image{max-height:250px}}
+
+/* 十の救現主: 金銀の機械環と、夢の光が共存するファンタジーアーカイブ */
+body.archive-view{background:radial-gradient(circle at 12% 8%,#e1bb5c18 0 1px,transparent 2px),radial-gradient(circle at 82% 18%,#d9e9ff1c 0 1px,transparent 2px),radial-gradient(circle at 72% 78%,#a78cff12 0,transparent 24rem),linear-gradient(145deg,#0b1321 0%,#17132a 48%,#08151f 100%)}
+body.archive-view .paper-noise{background:radial-gradient(ellipse at 12% 18%,#f0cb7b25,transparent 30%),radial-gradient(ellipse at 82% 12%,#9dbdff20,transparent 28%),radial-gradient(ellipse at 58% 90%,#a88dff17,transparent 38%);opacity:.95}
+body.archive-view .topbar{background:linear-gradient(90deg,#0b1426f5,#19152bf2 55%,#0a1723f5);border-bottom-color:#dbc37966;box-shadow:0 1px 26px #d4ae4b18}
+body.archive-view #archive{background:radial-gradient(circle at 82% 1%,#8ec9ff13 0,transparent 25rem),radial-gradient(circle at 14% 54%,#e2bb6410 0,transparent 30rem)}
+body.archive-view .archive-heading{background:linear-gradient(135deg,#111b31ed,#1d1733e8 54%,#0a1d2ae8),radial-gradient(circle at 78% 48%,#d9bc6e18,transparent 22rem);border-color:#d4bd775c;box-shadow:0 18px 55px #0008,0 0 0 1px #d4bd771c,inset 0 0 80px #d9bc6e12}
+body.archive-view .archive-heading:before{content:"";position:absolute;width:clamp(260px,38vw,520px);aspect-ratio:1;right:clamp(-150px,-10vw,-50px);top:50%;transform:translateY(-50%);border-radius:50%;background:radial-gradient(circle,transparent 0 38%,#dfc47b55 38.3% 38.8%,transparent 39.1% 57%,#b9d5ef42 57.3% 57.8%,transparent 58.1%),repeating-conic-gradient(from 8deg,transparent 0 9deg,#e7cb7a66 9.3deg 9.7deg,transparent 10deg 20deg);opacity:.65;mix-blend-mode:screen;pointer-events:none;z-index:1}
+body.archive-view .archive-heading:after{border-color:#f0d58b59;box-shadow:inset 0 0 28px #9ecbff13,0 0 22px #d9bd6b1c}
+body.archive-view .archive-intro{padding:1rem 1.45rem 1.2rem;margin:-1rem 0;background:linear-gradient(90deg,#0a1426e8 0%,#0a1426b8 68%,transparent 100%);border-left:2px solid #e4c87566}
+body.archive-view .archive-intro:before{content:"✦  ◇  ✧";display:block;margin-bottom:.35rem;color:#e9cb78;opacity:.78;font-size:.75rem;letter-spacing:.65em;text-shadow:0 0 12px #efca6a88}
+body.archive-view .archive-keyvisual img{opacity:.78;filter:saturate(1.28) brightness(1.08) contrast(1.04)}
+body.archive-view .archive-branding:after{background:linear-gradient(90deg,#091320ee 0%,#091320b8 30%,#0913203a 65%,#09132008 100%),linear-gradient(0deg,#0913209a,transparent 66%)}
+body.archive-view .game-logo img{filter:drop-shadow(0 0 5px #f3d47c99) drop-shadow(0 6px 18px #000)}
+body.archive-view .archive-subline span{border-color:#d9bd7570;background:linear-gradient(135deg,#16172adb,#101b2bd9);box-shadow:inset 0 0 14px #d4b85a12}
+body.archive-view .archive-subline span:nth-child(even){border-color:#b8d5ef70;color:#dfebfb}
+body.archive-view .categories{background:linear-gradient(90deg,#121b30f7,#1b172cf7,#101d29f7);border-block-color:#cdb66c66;box-shadow:0 10px 25px #05081055}
+body.archive-view .category{border-right-color:#c2cfe033;color:#c3d0e3}
+body.archive-view .category.active{background:linear-gradient(135deg,#3a2f1d,#27314b 58%,#19243b);box-shadow:inset 0 -2px #f2cf78,inset 0 0 22px #e3bf6419;color:#fff1c9}
+body.archive-view .category:hover{background:#2a2940}
+body.archive-view .tool-row{background:linear-gradient(#0b1321f5,#0b1321e8 80%,transparent)}
+body.archive-view .search,body.archive-view select{background:linear-gradient(135deg,#101a2be8,#19152ae8);border-color:#899bb855;box-shadow:inset 0 0 18px #d6b7650b}
+body.archive-view .search:focus-within{border-color:#ebce82;box-shadow:0 0 0 2px #d9b96822,inset 0 0 18px #d6b76512}
+body.archive-view .entry{background:linear-gradient(140deg,#1b2941f2,#111a2ce8 58%,#1a152be8);border-color:#8295b45c;box-shadow:inset 0 0 26px #cfac5c0b,0 10px 25px #05081025}
+body.archive-view .entry:before{width:34px;height:34px;border-top-color:#e2c36f;border-left-color:#b9d4ed;filter:drop-shadow(0 0 4px #d8b96855)}
+body.archive-view .entry:after{content:"✦  ◇";right:.85rem;color:#e4c674;text-shadow:0 0 8px #e4c67499;letter-spacing:.16em}
+body.archive-view .entry:hover{border-color:#ddc27a;box-shadow:inset 0 0 28px #d8b76513,0 12px 32px #0005}
+body.archive-view .tag{background:#111a2ce8;border-color:#879ab655}
+body.archive-view .detail-card,body.archive-view .editor-card{background:linear-gradient(135deg,#1c2941f5,#151429f5 56%,#0c1b29f5);border-color:#d2b76d;box-shadow:0 24px 80px #000b,0 0 42px #d0ae5b1c,inset 0 0 45px #b4cfff09}
+body.archive-view .close{background:#121d31;border-color:#a8b9d255}
+body.archive-view dialog::backdrop{background:#070b16e8;backdrop-filter:blur(9px)}
+@media(max-width:620px){body.archive-view .archive-heading:before{width:360px;right:-170px;top:29%;opacity:.52}body.archive-view .archive-intro{padding:.8rem 1rem 1rem;margin:-.7rem 0;background:linear-gradient(0deg,#0a1426ed,#0a1426b8 70%,transparent)}body.archive-view .archive-intro:before{font-size:.65rem;letter-spacing:.45em}body.archive-view .archive-keyvisual img{opacity:.82;filter:saturate(1.22) brightness(1.02)}}
 `;

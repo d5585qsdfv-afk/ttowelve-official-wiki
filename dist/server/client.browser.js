@@ -8,8 +8,8 @@ const filterFields=[['#enemyClass','classification','すべての分類'],['#ene
 const cardFilterFields=['#cardLevel','#cardRole','#cardChannel'];
 const medicineFilterFields=['#medicineTiming'];
 function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function showArchive(){$('#modeSelect').classList.add('hidden');$('#archive').classList.remove('hidden');window.scrollTo({top:0});render()}
-function showHome(){$('#archive').classList.add('hidden');$('#modeSelect').classList.remove('hidden');window.scrollTo({top:0})}
+function showArchive(){$('#modeSelect').classList.add('hidden');$('#archive').classList.remove('hidden');document.body.classList.add('archive-view');window.scrollTo({top:0});render()}
+function showHome(){$('#archive').classList.add('hidden');$('#modeSelect').classList.remove('hidden');document.body.classList.remove('archive-view');window.scrollTo({top:0})}
 function populateFilters(){
   const enemies=entries.filter(e=>e.category==='enemies').map(enemyMetadata);
   for(const [selector,key,label] of filterFields){
