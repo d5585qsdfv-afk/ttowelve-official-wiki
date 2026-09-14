@@ -147,6 +147,7 @@ const uniqueEntries = allEntries.filter((entry, index, source) =>
 function cleanCatalogText(value) {
   if (typeof value !== 'string') return value;
   return value
+    .replaceAll('現像元：', '現像元｜')
     .replaceAll('紋章｜CCFOLIA原文', '現像元')
     .replaceAll('リンクリング｜CCFOLIA原文', '現像元')
     .replaceAll('CCFOLIA原文', '現像元')
@@ -168,6 +169,12 @@ function cleanCatalogText(value) {
     .replaceAll('分類資料', '')
     .replaceAll('原文のまま収録', '')
     .replaceAll(EXTERNAL_GAME_SOURCE, 'Mixing');
+}
+
+function sourceTitleFromBody(value) {
+  if (typeof value !== 'string') return '';
+  const match = value.match(/(?:^|\n)現像元[-：:]\s*([^\n]+)/);
+  return match?.[1]?.trim() || '';
 }
 
 function cleanCatalogEntry(value) {
@@ -196,6 +203,11 @@ function prepareCatalogEntry(entry) {
     if (prepared.subtitle?.startsWith('ジョブ｜')) prepared.subtitle = `ジョブ｜${classLabel}`;
     if (prepared.summary?.startsWith('ジョブ本文')) prepared.summary = `ジョブ本文｜${classLabel}`;
     if (Array.isArray(prepared.tags)) prepared.tags = prepared.tags.map((tag) => tag === originalSource ? classLabel : tag);
+  }
+
+  if ((entry.category === 'emblems' || entry.category === 'rings') && prepared.subtitle?.includes('CCFOLIA原文')) {
+    const sourceTitle = sourceTitleFromBody(prepared.body) || (entry.category === 'rings' ? '十の救現主' : '');
+    if (sourceTitle) prepared.subtitle = `現像元｜${sourceTitle}`;
   }
 
   return prepared;
