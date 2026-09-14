@@ -62,6 +62,7 @@ export function renderPage() {
       <nav class="categories" aria-label="図鑑カテゴリー">
         <button class="category active" data-category="all" aria-pressed="true"><b>総覧</b><small id="countAll">0</small></button>
         <button class="category" data-category="weapons" aria-pressed="false"><b>武器種</b><small>図鑑</small></button>
+        <button class="category" data-category="weaponItems" aria-pressed="false"><b>武器</b><small>図鑑</small></button>
         <button class="category" data-category="cards" aria-pressed="false"><b>カード</b><small>図鑑</small></button>
         <button class="category" data-category="medicines" aria-pressed="false"><b>薬</b><small>図鑑</small></button>
         <button class="category" data-category="jobs" aria-pressed="false"><b>ジョブ</b><small>図鑑</small></button>
@@ -108,8 +109,8 @@ export function renderPage() {
       <input type="hidden" name="id">
       <input type="hidden" name="revision" value="0">
       <div class="form-grid">
-        <label><span>カテゴリー</span><select name="category" required><option value="weapons">武器種図鑑</option><option value="cards">カード図鑑</option><option value="medicines">薬図鑑</option><option value="jobs">ジョブ図鑑</option><option value="emblems">紋章図鑑</option><option value="rings">リンクリング図鑑</option><option value="enemies">敵図鑑＆攻略情報</option><option value="other">その他情報</option></select></label>
-        <label><span>識別色</span><select name="accent"><option value="lime">ライム</option><option value="amber">アンバー</option><option value="rose">ローズ</option><option value="violet">バイオレット</option><option value="ice">アイス</option><option value="sky">スカイ</option><option value="red">レッド</option><option value="teal">ティール</option></select></label>
+        <label><span>カテゴリー</span><select name="category" required><option value="weapons">武器種図鑑</option><option value="weaponItems">武器図鑑</option><option value="cards">カード図鑑</option><option value="medicines">薬図鑑</option><option value="jobs">ジョブ図鑑</option><option value="emblems">紋章図鑑</option><option value="rings">リンクリング図鑑</option><option value="enemies">敵図鑑＆攻略情報</option><option value="other">その他情報</option></select></label>
+        <label><span>識別色</span><select name="accent"><option value="lime">ライム</option><option value="amber">アンバー</option><option value="silver">シルバー</option><option value="rose">ローズ</option><option value="violet">バイオレット</option><option value="ice">アイス</option><option value="sky">スカイ</option><option value="red">レッド</option><option value="teal">ティール</option></select></label>
       </div>
       <label><span>名前</span><input name="title" required maxlength="80" placeholder="例：炎獣グラヴァ"></label>
       <fieldset id="enemyEditor" class="enemy-editor hidden"><legend>敵の分類と出現情報</legend><label><span>分類</span><input name="enemyClass" list="enemyClassOptions" maxlength="40" placeholder="通常敵・強敵・ボスなど"><datalist id="enemyClassOptions"><option value="通常敵"><option value="強敵"><option value="ボス"></datalist></label><div class="form-grid"><label><span>章</span><input name="enemyChapter" maxlength="100" placeholder="一章「探究者の道」"></label><label><span>出現場所</span><input name="enemyLocation" maxlength="120" placeholder="アマガミ滝高地"></label></div><small>ここで指定した内容を詳細本文の「分類・章・出現場所」に反映します。</small></fieldset>

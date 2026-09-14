@@ -5,8 +5,8 @@ import { assets } from './assets.generated.js';
 import { updateEnemyBody } from './entry-metadata.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
-const CATEGORY_SET = new Set(['weapons', 'cards', 'medicines', 'jobs', 'emblems', 'rings', 'enemies', 'other']);
-const ACCENT_SET = new Set(['lime', 'amber', 'rose', 'violet', 'ice', 'sky', 'red', 'teal']);
+const CATEGORY_SET = new Set(['weapons', 'weaponItems', 'cards', 'medicines', 'jobs', 'emblems', 'rings', 'enemies', 'other']);
+const ACCENT_SET = new Set(['lime', 'amber', 'silver', 'rose', 'violet', 'ice', 'sky', 'red', 'teal']);
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS });

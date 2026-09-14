@@ -1,4 +1,5 @@
 import { weaponEntries } from './weapons.generated.js';
+import { individualWeaponEntries } from './individual-weapons.generated.js';
 import { cardEntries } from './cards.generated.js';
 import { medicineEntries } from './medicines.generated.js';
 import { enemyEntries } from './enemies.generated.js';
@@ -185,4 +186,4 @@ function prepareCatalogEntry(entry) {
   return prepared;
 }
 
-export const defaultEntries = uniqueEntries.map(prepareCatalogEntry).map(cleanCatalogEntry);
+export const defaultEntries = [...uniqueEntries, ...individualWeaponEntries].map(prepareCatalogEntry).map(cleanCatalogEntry);
