@@ -1,0 +1,27 @@
+name: Unpack bootstrap source
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    if: github.event.head_commit.message != 'Unpack project source archive'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Unpack source
+        run: unzip -q ttowelve-project-bootstrap.zip -d .
+      - name: Remove bootstrap archive
+        run: rm -f ttowelve-project-bootstrap.zip
+      - name: Commit source tree
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet || git commit -m 'Unpack project source archive'
+          git push
