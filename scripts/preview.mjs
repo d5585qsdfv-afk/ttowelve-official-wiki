@@ -8,9 +8,10 @@ const db = {
     return {
       bind(...values) { args = values; return this; },
       async all() { return { results: [...rows.values()].filter(row => !row.is_deleted) }; },
-      async first() { const row = rows.get(args[0]); return row ? { revision: row.revision } : null; },
+      async first() { return rows.get(args[0]) || null; },
       async run() {
         const [id, game, category, title, subtitle, summary, body, tags_json, accent, sort_order, revision, updated_at, updated_by] = args;
+        if (rows.has(id) && rows.get(id).revision !== args[13]) return { meta: { changes: 0 } };
         rows.set(id, { id, game, category, title, subtitle, summary, body, tags_json, accent, sort_order, revision, is_deleted: 0, updated_at, updated_by });
         return { meta: { changes: 1 } };
       }

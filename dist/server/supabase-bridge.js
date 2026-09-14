@@ -1,6 +1,7 @@
 const config = window.__SUPABASE_CONFIG__ || {};
 const sessionKey = 'ttowelve.supabase.session';
 let session = readSession();
+let refreshing = null;
 
 function readSession() {
   try {
@@ -10,7 +11,7 @@ function readSession() {
 }
 
 function saveSession(value) {
-  session = value || null;
+  session = value ? { ...value, expires_at: value.expires_at || Math.floor(Date.now()/1000) + (value.expires_in || 3600) } : null;
   try {
     if (session) localStorage.setItem(sessionKey, JSON.stringify(session));
     else localStorage.removeItem(sessionKey);
@@ -44,15 +45,30 @@ async function request(path, options = {}) {
   const text = await response.text();
   let payload = null;
   try { payload = text ? JSON.parse(text) : null; } catch { payload = text; }
-  if (!response.ok) throw apiError(payload, `Supabaseでエラーが発生しました（${response.status}）。`);
+  if (!response.ok) {
+    const error = apiError(payload, `Supabaseでエラーが発生しました（${response.status}）。`);
+    error.status = response.status;
+    throw error;
+  }
   return payload;
 }
 
 async function refreshIfNeeded() {
-  if (!session?.refresh_token || !session.expires_at || session.expires_at * 1000 > Date.now() + 30000) return session;
-  const body = await request('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: JSON.stringify({ refresh_token: session.refresh_token }) });
-  saveSession(body?.access_token ? { ...body, user: body.user || session.user || userFromToken(body.access_token) } : null);
-  return session;
+  if (!configured() || !session?.refresh_token || (session.expires_at && session.expires_at * 1000 > Date.now() + 30000)) return session;
+  if (!refreshing) {
+    const original = session;
+    refreshing = (async () => {
+      try {
+        const body = await request('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: JSON.stringify({ refresh_token: original.refresh_token }) });
+        if (session === original) saveSession(body?.access_token ? { ...body, user: body.user || original.user || userFromToken(body.access_token) } : null);
+      } catch (error) {
+        if ([400,401,403].includes(error.status) && session === original) saveSession(null);
+        throw error;
+      } finally { refreshing = null; }
+      return session;
+    })();
+  }
+  return refreshing;
 }
 
 export function isSupabaseConfigured() { return configured(); }
@@ -87,6 +103,44 @@ export async function authHeaders(headers = {}) {
   const result = new Headers(headers);
   if (session?.access_token) result.set('Authorization', `Bearer ${session.access_token}`);
   return result;
+}
+
+window.addEventListener('storage', event => {
+  if (event.key === sessionKey) {
+    session = readSession();
+    window.dispatchEvent(new Event('archive-auth-changed'));
+  }
+});
+
+export async function accountAccess() {
+  const response = await fetch('/api/session', { headers: await authHeaders(), cache: 'no-store' });
+  if (!response.ok) throw new Error('権限を取得できません。時間をおいて再試行してください。');
+  return response.json();
+}
+
+export async function archiveSaveContext() {
+  const active = await getSession();
+  if (!active?.user?.id) throw new Error('クラウド保存にはログインが必要です。');
+  const games = await request('/rest/v1/games?slug=eq.juno&is_published=eq.true&select=id&limit=1');
+  const gameId = games?.[0]?.id;
+  if (!gameId) throw new Error('ゲームの保存先を取得できません。');
+  const rows = await request('/rest/v1/save_data?game_id=eq.' + encodeURIComponent(gameId) + '&user_id=eq.' + encodeURIComponent(active.user.id) + '&save_key=eq.archive.preferences&select=data,version,updated_at');
+  return { userId: active.user.id, gameId, row: rows?.[0] || null };
+}
+
+export async function saveArchivePreferences(context, data) {
+  await getSession();
+  if (currentUser()?.id !== context.userId) throw new Error('アカウントが変わりました。保存先を読み直してください。');
+  try {
+    const result = await request('/rest/v1/rpc/upsert_save_data', { method:'POST', body:JSON.stringify({
+      p_game_id:context.gameId, p_save_key:'archive.preferences', p_data:data,
+      p_expected_version:context.row?.version || 0,
+    }) });
+    return { ...context, row: Array.isArray(result) ? result[0] : result };
+  } catch (error) {
+    if (error.message.includes('SAVE_VERSION_CONFLICT')) throw new Error('別の端末で保存されています。「保存先を再読込」で最新状態を確認してください。');
+    throw error;
+  }
 }
 
 async function currentRole() {

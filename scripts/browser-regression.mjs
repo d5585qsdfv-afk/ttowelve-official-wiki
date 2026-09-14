@@ -12,7 +12,7 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function cdpTarget() {
   for (let attempt=0;attempt<30;attempt++) {
     try {
-      const response=await fetch(`http://127.0.0.1:${port}/json/new?http://127.0.0.1:4173/games/juno/items/`,{method:"PUT"});
+      const response=await fetch(`http://127.0.0.1:${port}/json/new?http://127.0.0.1:4173/`,{method:"PUT"});
       if(response.ok) return response.json();
     } catch {}
     await wait(100);
@@ -50,14 +50,17 @@ try {
   if(state.cards!==13||state.count!=="13件") throw new Error(`Card role filter failed: ${JSON.stringify(state)}`);
   await evaluate(`(()=>{document.querySelector('#cardRole').value="";document.querySelector('#cardRole').dispatchEvent(new Event("change",{bubbles:true}));document.querySelector('#entryGrid .entry-hit').click();return true})()`); await wait(150);
   if(!(await evaluate(`document.querySelector('#detailDialog')?.open&&document.querySelector('#detailTitle')?.textContent.includes("ムクイルカ")`))) throw new Error("Detail dialog failed");
+  await evaluate(`(()=>{document.querySelector('[data-action="close-detail"]').click();document.querySelector('[data-action="open-account"]').click();return true})()`); await wait(150);
+  if(!(await evaluate(`document.querySelector('#accountDialog')?.open&&document.querySelector('#authSubmit')?.textContent.includes("ログイン")`))) throw new Error("Account dialog failed");
+  await evaluate(`(()=>{document.querySelector('[data-action="close-account"]').click();document.querySelector('[data-action="open-editor"]').click();return true})()`); await wait(150);
+  if(!(await evaluate(`document.querySelector('#editorDialog')?.open`))) throw new Error("Local preview editor failed");
   await send("Emulation.setDeviceMetricsOverride",{width:390,height:844,deviceScaleFactor:1,mobile:false});
-  await navigate("http://127.0.0.1:4173/games/idlet/");
-  if(!(await evaluate(`document.body.textContent.includes("COMING SOON")`))) throw new Error("Coming Soon failed");
+  await navigate("http://127.0.0.1:4173/");
   const viewport=await evaluate(`({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth})`);
   if(viewport.scroll>viewport.client) throw new Error(`Horizontal overflow: ${JSON.stringify(viewport)}`);
   const missingAsset=await fetch("http://127.0.0.1:4173/assets/does-not-exist.webp");
   if(missingAsset.status!==404) throw new Error(`Missing asset returned ${missingAsset.status}`);
-  console.log("Browser regression passed: lobby navigation, category selection, local search, empty state, role filter, detail dialog, mobile layout, Coming Soon, and missing-asset 404.");
+  console.log("Browser regression passed: lobby navigation, category selection, local search, empty state, role filter, detail dialog, account dialog, local editor, mobile layout, and missing-asset 404.");
 } finally {
   socket.close(); chrome.kill();
 }

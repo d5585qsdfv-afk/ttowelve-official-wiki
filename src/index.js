@@ -61,7 +61,7 @@ async function supabaseUserFrom(request, env) {
 }
 
 async function authenticatedUser(request, env) {
-  const platformUser = userFrom(request);
+  const platformUser = env.DB ? userFrom(request) : null;
   if (platformUser) return { ...platformUser, source: 'platform' };
   return supabaseUserFrom(request, env);
 }
@@ -77,23 +77,35 @@ function supabaseEntryFromPage(row) {
   const id = typeof content.entry_id === 'string' ? content.entry_id : stored.id;
   if (!id) return null;
   return normalizeWeaponEntry(normalizeEnemyEntry({
+    ...(defaultEntries.find(entry => entry.id === id) || {}),
     ...stored,
     id,
     game: 'ten-saviors',
     title: row.title || stored.title || id,
     summary: row.summary ?? stored.summary ?? '',
     revision: Math.max(0, Number(row.version || 1) - 1),
-    updatedAt: row.updated_at,
+    updatedAt: Date.parse(row.updated_at) || 0,
     source: 'クラウド編集',
   }));
 }
 
+async function supabasePages(env, token = '') {
+  const gameId = await supabaseGameId(env, token);
+  if (!gameId) throw new Error('GAME_UNAVAILABLE');
+  const rows = [];
+  for (let offset = 0; ; offset += 500) {
+    const result = await supabaseRequest(env, '/rest/v1/wiki_pages?game_id=eq.' + encodeURIComponent(gameId) + '&status=eq.published&deleted_at=is.null&select=id,title,summary,content,version,updated_at&order=id&limit=500&offset=' + offset, { method: 'GET' }, token);
+    if (!result?.response.ok || !Array.isArray(result.payload)) throw new Error('WIKI_UNAVAILABLE');
+    rows.push(...result.payload);
+    if (result.payload.length < 500) break;
+  }
+  return { gameId, rows };
+}
+
 async function listSupabaseEntries(env) {
-  const gameId = await supabaseGameId(env);
-  if (!gameId) return [];
-  const result = await supabaseRequest(env, `/rest/v1/wiki_pages?game_id=eq.${encodeURIComponent(gameId)}&status=eq.published&deleted_at=is.null&select=id,title,summary,content,version,updated_at&limit=1000`, { method: 'GET' });
-  if (!result?.response.ok || !Array.isArray(result.payload)) return [];
-  return result.payload.map(supabaseEntryFromPage).filter(Boolean);
+  if (!supabaseConfig(env)) return [];
+  const { rows } = await supabasePages(env);
+  return rows.map(supabaseEntryFromPage).filter(Boolean);
 }
 
 function cleanText(value, max) {
@@ -112,35 +124,38 @@ function toEntry(row) {
 
 async function listEntries(env) {
   if (!env.DB) {
-    try {
-      const overrides = await listSupabaseEntries(env);
-      if (!overrides.length) return defaultEntries;
-      const stored = new Map(overrides.map(entry => [entry.id, entry]));
-      for (const entry of defaultEntries) if (!stored.has(entry.id)) stored.set(entry.id, entry);
-      return [...stored.values()];
-    } catch { return defaultEntries; }
+    const overrides = await listSupabaseEntries(env);
+    if (!overrides.length) return defaultEntries;
+    const stored = new Map(overrides.map(entry => [entry.id, entry]));
+    for (const entry of defaultEntries) if (!stored.has(entry.id)) stored.set(entry.id, entry);
+    return [...stored.values()];
   }
   const result = await env.DB.prepare('SELECT * FROM entries WHERE is_deleted = 0 ORDER BY sort_order, title').all();
   const stored = new Map((result.results || []).map(row => {
-    const entry = normalizeWeaponEntry(normalizeEnemyEntry(toEntry(row)));
+    const entry = normalizeWeaponEntry(normalizeEnemyEntry({ ...(defaultEntries.find(entry => entry.id === row.id) || {}), ...toEntry(row) }));
     return [row.id, entry];
   }));
   for (const entry of defaultEntries) if (!stored.has(entry.id)) stored.set(entry.id, entry);
   return [...stored.values()];
 }
 
-function parseEntryInput(input) {
-  const title = cleanText(input.title, 80);
+function parseEntryInput(input, baseline = {}) {
+  for (const [key, limit] of Object.entries({title:200,subtitle:1000,summary:4000,body:100000})) {
+    if (typeof input[key] === 'string' && input[key].trim().length > limit) return { error: '入力が長すぎます（' + key + '：最大' + limit + '文字）。内容を短くして保存してください。' };
+  }
+  if (Array.isArray(input.tags) && (input.tags.length > 100 || input.tags.some(tag => typeof tag !== 'string' || tag.trim().length > 200))) return { error: 'タグは各200文字、100個以内で入力してください。' };
+  const title = cleanText(input.title, 200);
   const category = CATEGORY_SET.has(input.category) ? input.category : '';
   if (!title || !category) return { error: '名前とカテゴリーは必須です。' };
   const accent = ACCENT_SET.has(input.accent) ? input.accent : 'lime';
   const id = cleanText(input.id, 100) || `${category}-${crypto.randomUUID()}`;
   const revision = Number.isInteger(input.revision) && input.revision >= 0 ? input.revision : 0;
   const entry = {
+    ...baseline,
     id, game: 'ten-saviors', category, title,
-    subtitle: cleanText(input.subtitle, 120), summary: cleanText(input.summary, 240),
-    body: cleanText(input.body, 6000), tags: Array.isArray(input.tags) ? input.tags.map(x => cleanText(x, 40)).filter(Boolean).slice(0, 12) : [],
-    accent, sortOrder: 0, revision: revision + 1, updatedAt: Date.now(), source: 'クラウド編集'
+    subtitle: cleanText(input.subtitle, 1000), summary: cleanText(input.summary, 4000),
+    body: cleanText(input.body, 100000), tags: Array.isArray(input.tags) ? input.tags.map(x => cleanText(x, 200)).filter(Boolean) : [],
+    accent, sortOrder: baseline.sortOrder ?? Date.now(), revision: revision + 1, updatedAt: Date.now(), source: 'クラウド編集'
   };
   if (category === 'enemies' && input.enemyClass !== undefined) {
     entry.body = updateEnemyBody(entry.body, {
@@ -156,14 +171,10 @@ async function saveSupabaseEntry(request, env, user, input) {
   const parsed = parseEntryInput(input);
   if (parsed.error) return json({ error: parsed.error }, 400);
   const { id, revision, entry } = parsed;
-  const gameId = await supabaseGameId(env, user.accessToken);
-  if (!gameId) return json({ error: 'Supabase側のゲーム設定を確認できません。' }, 503);
-  const pages = await supabaseRequest(env, `/rest/v1/wiki_pages?game_id=eq.${encodeURIComponent(gameId)}&status=eq.published&deleted_at=is.null&select=id,title,summary,content,version,updated_at&limit=1000`, { method: 'GET' }, user.accessToken);
-  if (!pages?.response.ok || !Array.isArray(pages.payload)) return json({ error: 'Wikiデータを確認できません。' }, 503);
-  const existing = pages.payload.find(row => {
-    const content = row.content && typeof row.content === 'object' ? row.content : {};
-    return content.entry_id === id || content.entry?.id === id;
-  });
+  const { gameId, rows } = await supabasePages(env, user.accessToken);
+  const existing = rows.find(row => row.content?.entry_id === id || row.content?.entry?.id === id);
+  const baseline = existing ? supabaseEntryFromPage(existing) : defaultEntries.find(item => item.id === id);
+  Object.assign(entry, parseEntryInput({ ...input, id }, baseline || {}).entry);
   const content = { entry_id: id, entry };
   if (!existing) {
     if (revision !== 0) return json({ conflict: true, currentRevision: 0 }, 409);
@@ -172,9 +183,12 @@ async function saveSupabaseEntry(request, env, user, input) {
       method: 'POST', headers: { prefer: 'return=representation' },
       body: JSON.stringify({ p_game_id: gameId, p_slug: slug, p_title: entry.title, p_summary: entry.summary, p_content: content, p_status: 'published' }),
     }, user.accessToken);
-    if (!created?.response.ok) return json({ error: 'Wiki保存に失敗しました。' }, created?.response.status === 403 ? 403 : 400);
+    if (!created?.response.ok) {
+      if (created?.response.status === 409 || created?.payload?.code === '23505') return json({ conflict: true }, 409);
+      return json({ error: 'Wiki保存に失敗しました。' }, created?.response.status === 403 ? 403 : 400);
+    }
     const page = Array.isArray(created.payload) ? created.payload[0] : created.payload;
-    return json({ saved: true, entry: { ...entry, revision: Math.max(0, Number(page?.version || 1) - 1), updatedAt: page?.updated_at || entry.updatedAt } });
+    return json({ saved: true, entry: { ...entry, revision: Math.max(0, Number(page?.version || 1) - 1), updatedAt: Date.parse(page?.updated_at) || entry.updatedAt } });
   }
   const currentRevision = Math.max(0, Number(existing.version || 1) - 1);
   if (currentRevision !== revision) return json({ conflict: true, currentRevision }, 409);
@@ -192,7 +206,7 @@ async function saveSupabaseEntry(request, env, user, input) {
     return json({ error: 'Wiki保存に失敗しました。' }, 400);
   }
   const page = Array.isArray(updated.payload) ? updated.payload[0] : updated.payload;
-  return json({ saved: true, entry: { ...entry, revision: Math.max(0, Number(page?.version || existing.version + 1) - 1), updatedAt: page?.updated_at || entry.updatedAt } });
+  return json({ saved: true, entry: { ...entry, revision: Math.max(0, Number(page?.version || existing.version + 1) - 1), updatedAt: Date.parse(page?.updated_at) || entry.updatedAt } });
 }
 
 async function saveEntry(request, env) {
@@ -202,39 +216,26 @@ async function saveEntry(request, env) {
   if (origin && origin !== new URL(request.url).origin) return json({ error: '送信元を確認できません。' }, 403);
   let input;
   try { input = await request.json(); } catch { return json({ error: '入力内容を読み取れません。' }, 400); }
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return json({ error: '入力内容を確認してください。' }, 400);
   if (user.source === 'supabase') {
     const role = await supabaseRequest(env, '/rest/v1/rpc/current_role', { method: 'POST', body: '{}' }, user.accessToken);
     if (!role?.response.ok || !['editor', 'admin'].includes(role.payload)) return json({ error: 'Editor以上のRoleが必要です。' }, 403);
     return saveSupabaseEntry(request, env, user, input);
   }
   if (!env.DB) return json({ error: 'クラウドデータベースを利用できません。' }, 503);
-  const title = cleanText(input.title, 80);
-  const category = CATEGORY_SET.has(input.category) ? input.category : '';
-  if (!title || !category) return json({ error: '名前とカテゴリーは必須です。' }, 400);
-  const accent = ACCENT_SET.has(input.accent) ? input.accent : 'lime';
-  const id = cleanText(input.id, 100) || `${category}-${crypto.randomUUID()}`;
-  const revision = Number.isInteger(input.revision) && input.revision >= 0 ? input.revision : 0;
-  const existing = await env.DB.prepare('SELECT revision FROM entries WHERE id = ?').bind(id).first();
-  if (existing && existing.revision !== revision) return json({ conflict: true, currentRevision: existing.revision }, 409);
+  const parsed = parseEntryInput(input);
+  if (parsed.error) return json({ error: parsed.error }, 400);
+  const { id, revision } = parsed;
+  const existing = await env.DB.prepare('SELECT * FROM entries WHERE id = ?').bind(id).first();
+  if ((existing ? existing.revision : 0) !== revision) return json({ conflict: true, currentRevision: existing?.revision || 0 }, 409);
+  const baseline = { ...(defaultEntries.find(item => item.id === id) || {}), ...(existing ? toEntry(existing) : {}) };
+  const normalizedEntry = parseEntryInput({ ...input, id }, baseline).entry;
   const now = Date.now();
-  const entry = {
-    id, game: 'ten-saviors', category, title,
-    subtitle: cleanText(input.subtitle, 120), summary: cleanText(input.summary, 240),
-    body: cleanText(input.body, 6000), tags: Array.isArray(input.tags) ? input.tags.map(x => cleanText(x, 40)).filter(Boolean).slice(0, 12) : [],
-    accent, sortOrder: existing ? 0 : now, revision: revision + 1, updatedAt: now, source: 'クラウド編集'
-  };
-  if (category === 'enemies' && input.enemyClass !== undefined) {
-    entry.body = updateEnemyBody(entry.body, {
-      classification: cleanText(input.enemyClass, 40),
-      chapter: cleanText(input.enemyChapter, 100),
-      location: cleanText(input.enemyLocation, 120),
-    });
-  }
-  const normalizedEntry = normalizeWeaponEntry(normalizeEnemyEntry(entry));
-  await env.DB.prepare(`INSERT INTO entries (id, game, category, title, subtitle, summary, body, tags_json, accent, sort_order, revision, is_deleted, updated_at, updated_by)
+  const result = await env.DB.prepare(`INSERT INTO entries (id, game, category, title, subtitle, summary, body, tags_json, accent, sort_order, revision, is_deleted, updated_at, updated_by)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET category=excluded.category,title=excluded.title,subtitle=excluded.subtitle,summary=excluded.summary,body=excluded.body,tags_json=excluded.tags_json,accent=excluded.accent,revision=excluded.revision,is_deleted=0,updated_at=excluded.updated_at,updated_by=excluded.updated_by`)
-    .bind(normalizedEntry.id, normalizedEntry.game, normalizedEntry.category, normalizedEntry.title, normalizedEntry.subtitle, normalizedEntry.summary, normalizedEntry.body, JSON.stringify(normalizedEntry.tags), normalizedEntry.accent, normalizedEntry.sortOrder, normalizedEntry.revision, now, user.userId).run();
+    ON CONFLICT(id) DO UPDATE SET category=excluded.category,title=excluded.title,subtitle=excluded.subtitle,summary=excluded.summary,body=excluded.body,tags_json=excluded.tags_json,accent=excluded.accent,revision=excluded.revision,is_deleted=0,updated_at=excluded.updated_at,updated_by=excluded.updated_by WHERE entries.revision = ?`)
+    .bind(normalizedEntry.id, normalizedEntry.game, normalizedEntry.category, normalizedEntry.title, normalizedEntry.subtitle, normalizedEntry.summary, normalizedEntry.body, JSON.stringify(normalizedEntry.tags), normalizedEntry.accent, normalizedEntry.sortOrder, normalizedEntry.revision, now, user.userId, revision).run();
+  if (result.meta?.changes !== 1) return json({ conflict: true }, 409);
   return json({ saved: true, entry: normalizedEntry });
 }
 
@@ -251,10 +252,26 @@ async function handle(request, env) {
   if (url.pathname === '/favicon.svg') return new Response(renderFavicon(), { headers: { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=86400' } });
   if (url.pathname === '/app.js') return new Response(request.method === 'HEAD' ? null : clientSource, { headers: { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' } });
   if (url.pathname === '/api/entries' && request.method === 'GET') {
-    try { return json({ entries: await listEntries(env), authenticated: !!userFrom(request) }); }
-    catch (error) { return json({ error: '図鑑情報を読み込めません。', detail: String(error?.message || '') }, 500); }
+    const backend = env.DB ? 'd1' : supabaseConfig(env) ? 'supabase' : 'local';
+    try { return json({ entries: await listEntries(env), sync: backend === 'local' ? 'local' : 'synced' }); }
+    catch { return json({ entries: defaultEntries, sync: 'unavailable', message: '保存先に接続できないため、初期収録データを表示しています。' }); }
   }
-  if (url.pathname === '/api/entries' && request.method === 'POST') return saveEntry(request, env);
+  if (url.pathname === '/api/session' && request.method === 'GET') {
+    const user = await authenticatedUser(request, env);
+    if (!user) return json({ authenticated: false, role: 'guest', canEdit: false, canPropose: false });
+    if (user.source === 'platform') return json({ authenticated: true, role: 'editor', canEdit: true, canPropose: false });
+    try {
+      const result = await supabaseRequest(env, '/rest/v1/rpc/current_role', { method: 'POST', body: '{}' }, user.accessToken);
+      if (!result?.response.ok) return json({ error: '権限情報を取得できません。' }, 503);
+      const role = result.payload;
+      return json({ authenticated: true, role, canEdit: ['editor','admin'].includes(role), canPropose: ['contributor','editor','admin'].includes(role) });
+    } catch { return json({ error: '権限情報を取得できません。' }, 503); }
+  }
+  if (url.pathname === '/api/entries' && request.method === 'POST') {
+    try { return await saveEntry(request, env); }
+    catch { return json({ error: '保存先に接続できません。入力を残したまま再試行できます。' }, 503); }
+  }
+  if (url.pathname.startsWith('/api/')) return json({ error: 'APIが見つかりません。' }, 404);
   if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
   return new Response(request.method === 'HEAD' ? null : renderPage({
     supabaseUrl: env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL,

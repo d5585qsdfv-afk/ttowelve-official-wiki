@@ -4,5 +4,9 @@
 import worker from '../dist/server/index.js';
 
 export async function onRequest(context) {
-  return worker.fetch(context.request, context.env, context);
+  // Pages authenticates through Supabase, never through client-supplied Sites headers.
+  const request = new Request(context.request);
+  request.headers.delete('oai-authenticated-user-id');
+  request.headers.delete('oai-authenticated-user-email');
+  return worker.fetch(request, context.env, context);
 }

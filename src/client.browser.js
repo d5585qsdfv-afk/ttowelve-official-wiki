@@ -2,11 +2,11 @@ import { enemyMetadata, normalizeEnemyEntry, updateEnemyBody } from '/entry-meta
 import { normalizeWeaponEntry, weaponDisplayMetadata } from '/weapon-metadata.js';
 import { decorateEntry, matchesTags, searchEntry } from '/tagging.js';
 import { MAX_PINNED_ENTRIES, normalizePinnedIds, pinnedEntries, togglePinnedIds } from '/pin-state.js';
-import { authHeaders, currentSession, currentUser, isSupabaseConfigured, signIn, signOut, signUp, submitWikiProposal } from '/supabase-bridge.js?v=2';
+import { accountAccess, archiveSaveContext, saveArchivePreferences, authHeaders, currentSession, currentUser, isSupabaseConfigured, signIn, signOut, signUp, submitWikiProposal } from '/supabase-bridge.js?v=3';
 const initial=window.__INITIAL_ENTRIES__||[];
 const prepareEntry=entry=>decorateEntry(normalizeWeaponEntry(normalizeEnemyEntry(entry)));
 let entries=initial.map(prepareEntry),activeCategory='all',currentEntry=null;
-let authMode='signin',accountBusy=false;
+let authMode='signin',accountBusy=false,access={canEdit:false,canPropose:false},cloudContext=null,cloudBusy=false,conflictEntry=null,accessRequest=0;
 let selectedTags=new Set();
 const FAVORITE_TAGS_KEY='ttowelve.favorite-tags';
 const FAVORITE_ENTRIES_KEY='ttowelve.favorite-entries';
@@ -57,17 +57,25 @@ function accountMessage(message=''){const node=$('#accountStatus');if(node)node.
 function authMessage(message=''){const node=$('#authMessage');if(node)node.textContent=message}
 function proposalMessage(message=''){const node=$('#proposalMessage');if(node)node.textContent=message}
 function populateProposalEntries(){const select=$('#proposalEntry');if(!select)return;const previous=select.value;select.innerHTML=entries.map(entry=>`<option value="${esc(entry.id)}">${esc(labels[entry.category]||entry.category)}｜${esc(entry.title)}</option>`).join('');if(entries.some(entry=>entry.id===previous))select.value=previous;updateProposalContent()}
-function updateProposalContent(){const select=$('#proposalEntry'),area=$('#proposalContent'),title=$('#proposalTitle');if(!select||!area)return;const entry=entries.find(item=>item.id===select.value);if(!entry)return;if(!area.value||area.dataset.entryId===select.value){area.value=entry.body||entry.summary||'';area.dataset.entryId=entry.id}if(title&&!title.value)title.value=`${entry.title}の編集提案`}
+function updateProposalContent(){const entry=entries.find(item=>item.id===$('#proposalEntry').value);if(!entry)return;$('#proposalContent').value=entry.body||entry.summary||'';$('#proposalTitle').value=entry.title+'の編集提案';$('#proposalSummary').value=''}
 function renderAccount(){
-  const configured=isSupabaseConfigured(),session=currentSession(),user=currentUser();
-  const authPanel=$('#authPanel'),proposalPanel=$('#proposalPanel'),nameField=$('#authNameField'),submit=$('#authSubmit'),toggle=$('[data-action="toggle-auth-mode"]'),button=$('#accountButtonLabel');
-  if(button)button.textContent=session?'アカウント':'ログイン';
-  if(!configured){authPanel?.classList.remove('hidden');proposalPanel?.classList.add('hidden');if(submit)submit.disabled=true;if(toggle)toggle.disabled=true;accountMessage('Supabase連携が未設定のため、ログインと提案は準備中です。');return}
-  if(session){authPanel?.classList.add('hidden');proposalPanel?.classList.remove('hidden');populateProposalEntries();accountMessage(`${user?.email||'ログイン中'}｜提案を送信できます。`);return}
-  authPanel?.classList.remove('hidden');proposalPanel?.classList.add('hidden');if(submit){submit.disabled=false;submit.textContent=authMode==='signin'?'ログイン':'新規登録'}if(toggle){toggle.disabled=false;toggle.textContent=authMode==='signin'?'新規登録に切り替え':'ログインに切り替え'}if(nameField)nameField.classList.toggle('hidden',authMode==='signin');accountMessage('ログインすると、編集提案を送れます。');
+ const configured=isSupabaseConfigured(),session=currentSession();
+ $('#accountButtonLabel').textContent=session?'アカウント':'ログイン';$('#authPanel').classList.toggle('hidden',!!session);$('#signedInPanel').classList.toggle('hidden',!session);$('#proposalPanel').classList.toggle('hidden',!session||!access.canPropose);
+ $('#authSubmit').disabled=!configured||accountBusy;$('#authSubmit').textContent=authMode==='signin'?'ログイン':'新規登録';$('[data-action="toggle-auth-mode"]').disabled=!configured||accountBusy;$('[data-action="toggle-auth-mode"]').textContent=authMode==='signin'?'新規登録に切り替え':'ログインに切り替え';$('#authNameField').classList.toggle('hidden',authMode==='signin');$('#authPassword').autocomplete=authMode==='signin'?'current-password':'new-password';$('#proposalSubmit').disabled=accountBusy;$('[data-action="sign-out"]').disabled=cloudBusy||accountBusy;
+ if(access.canPropose&&!$('#proposalEntry').options.length)populateProposalEntries();
+ accountMessage(!configured?'アカウント機能は準備中です。':session?(currentUser()?.email||'ログイン中')+'｜'+(access.canEdit?'図鑑を編集できます。':access.canPropose?'編集提案を送れます。':'お気に入りを保存できます。編集提案には投稿権限が必要です。'):'ログインすると、お気に入りを別の端末へ引き継げます。');
+ $$('[data-action="open-editor"],[data-action="edit-current"]').forEach(button=>button.classList.toggle('hidden',!access.canEdit));
+ $$('[data-action^="cloud-"]').forEach(button=>button.disabled=cloudBusy||(button.dataset.action!=='cloud-load'&&!cloudContext)||(button.dataset.action==='cloud-restore'&&!cloudContext?.row));
 }
-function openAccount(){renderAccount();$('#accountDialog').showModal()}
-async function handleAuthSubmit(event){event.preventDefault();if(accountBusy)return;const email=$('#authEmail').value,password=$('#authPassword').value,name=$('#authName').value;accountBusy=true;$('#authSubmit').disabled=true;authMessage(authMode==='signin'?'ログインしています…':'アカウントを作成しています…');try{const result=authMode==='signin'?await signIn(email,password):await signUp(email,password,name);if(authMode==='signup'&&!result?.access_token){authMessage('登録しました。メール確認が必要な設定の場合は、確認後にログインしてください。');return}authMessage('');renderAccount()}catch(error){authMessage(error.message||'認証に失敗しました。')}finally{accountBusy=false;renderAccount()}}
+async function refreshAccess(){const request=++accessRequest;try{const result=await accountAccess();if(request!==accessRequest)return;access=result;renderAccount()}catch(error){if(request!==accessRequest)return;access={canEdit:false,canPropose:false};renderAccount();accountMessage(error.message)}}
+function openAccount(){renderAccount();if(!$('#accountDialog').open)$('#accountDialog').showModal();void refreshAccess()}
+async function cloudAction(action){if(cloudBusy)return;cloudBusy=true;renderAccount();const status=$('#cloudStatus');status.textContent='保存先に接続しています…';try{
+ if(action==='cloud-load'){cloudContext=await archiveSaveContext();status.textContent=cloudContext.row?'保存済みデータがあります。保存はクラウドを更新し、復元はこの端末のお気に入りを置き換えます。':'まだ保存されていません。この端末の内容を保存できます。'}
+ else if(!cloudContext||cloudContext.userId!==currentUser()?.id)throw new Error('保存先を読み直してください。');
+ else if(action==='cloud-save'){cloudContext=await saveArchivePreferences(cloudContext,{schemaVersion:1,favoriteEntryIds:[...favoriteEntryIds],favoriteTags:[...favoriteTags],pinnedEntryIds});status.textContent='お気に入りと固定項目をクラウドへ保存しました。'}
+ else if(action==='cloud-restore'){const latest=await archiveSaveContext();if(latest.userId!==cloudContext?.userId||latest.userId!==currentUser()?.id)throw new Error('アカウントが変わりました。保存先を読み直してください。');cloudContext=latest;const data=latest.row?.data;if(data?.schemaVersion!==1||!['favoriteEntryIds','favoriteTags','pinnedEntryIds'].every(key=>Array.isArray(data[key])&&data[key].every(value=>typeof value==='string')))throw new Error('復元できる形式の保存データがありません。');favoriteEntryIds=new Set(data.favoriteEntryIds);favoriteTags=new Set(data.favoriteTags);pinnedEntryIds=normalizePinnedIds(data.pinnedEntryIds);saveFavoriteEntryIds();saveFavoriteTags();savePinnedEntryIds();render();updateDetailControls();status.textContent='クラウドの内容をこの端末へ復元しました。'}
+ }catch(error){status.textContent=error.message||'保存先に接続できませんでした。'}finally{cloudBusy=false;renderAccount()}}
+async function handleAuthSubmit(event){event.preventDefault();if(accountBusy)return;const email=$('#authEmail').value,password=$('#authPassword').value,name=$('#authName').value;accountBusy=true;$('#authSubmit').disabled=true;authMessage(authMode==='signin'?'ログインしています…':'アカウントを作成しています…');try{const result=authMode==='signin'?await signIn(email,password):await signUp(email,password,name);if(authMode==='signup'&&!result?.access_token){authMessage('登録しました。メール確認が必要な設定の場合は、確認後にログインしてください。');return}authMessage('');await refreshAccess()}catch(error){authMessage(error.message||'認証に失敗しました。')}finally{accountBusy=false;renderAccount()}}
 async function handleProposalSubmit(event){event.preventDefault();if(accountBusy)return;const entry=entries.find(item=>item.id===$('#proposalEntry').value);if(!entry){proposalMessage('対象の図鑑を選択してください。');return}const title=$('#proposalTitle').value.trim(),summary=$('#proposalSummary').value.trim(),content=$('#proposalContent').value.trim();if(!title||!content){proposalMessage('タイトルと変更案本文は必須です。');return}accountBusy=true;$('#proposalSubmit').disabled=true;proposalMessage('提案を送信しています…');try{await submitWikiProposal({entry,title,summary,content});proposalMessage('編集提案を送信しました。審査をお待ちください。');$('#proposalTitle').value='';$('#proposalSummary').value='';$('#proposalContent').value=''}catch(error){proposalMessage(error.message||'提案を送信できませんでした。')}finally{accountBusy=false;renderAccount()}}
 function showArchive(){$('#modeSelect').classList.add('hidden');$('#archive').classList.remove('hidden');document.body.classList.add('archive-view');window.scrollTo({top:0});render()}
 function showHome(){$('#archive').classList.add('hidden');$('#modeSelect').classList.remove('hidden');document.body.classList.remove('archive-view');window.scrollTo({top:0})}
@@ -144,7 +152,8 @@ function openDetail(id){
   $('#detailDialog').showModal();
 }
 function toggleEnemyEditor(){const enemy=$('#editorForm').elements.category.value==='enemies';$('#enemyEditor').classList.toggle('hidden',!enemy);$('#enemyEditor').disabled=!enemy}
-function openEditor(entry){
+async function openEditor(entry){
+  await refreshAccess();if(!access.canEdit){openAccount();return}conflictEntry=null;$('#editConflict').classList.add('hidden');
   const f=$('#editorForm');f.reset();$('#formMessage').textContent='';$('#editorHeading').textContent=entry?'記録を編集':'記録を追加';
   if(entry){
     for(const key of ['id','revision','category','accent','title','subtitle','summary','body'])f.elements[key].value=entry[key]??'';
@@ -153,18 +162,17 @@ function openEditor(entry){
   }else{f.elements.id.value='';f.elements.revision.value='0';if(activeCategory!=='all')f.elements.category.value=activeCategory}
   toggleEnemyEditor();$('#editorDialog').showModal();
 }
-async function load(){
-  try{const response=await fetch('/api/entries',{headers:{accept:'application/json'}});if(!response.ok)throw new Error();const data=await response.json();entries=(data.entries||initial).map(prepareEntry);$('#syncState').classList.remove('error');$('#syncState').classList.add('ready');$('#syncState').innerHTML='<i></i>クラウド同期'}
-  catch{$('#syncState').classList.add('error');$('#syncState').innerHTML='<i></i>初期データ表示中'}
-  populateFilters();render();
-}
+async function load(){let synced=false;try{const response=await fetch('/api/entries',{headers:{accept:'application/json'},cache:'no-store'});if(!response.ok)throw new Error();const data=await response.json();if(!Array.isArray(data.entries))throw new Error();if(data.sync!=='unavailable')entries=data.entries.map(prepareEntry);synced=data.sync==='synced';$('#syncState').classList.toggle('error',data.sync==='unavailable');$('#syncState').classList.toggle('ready',synced);$('#syncState').textContent=synced?'クラウド読込済み':data.sync==='local'?'端末用データ':'接続できません・表示内容を保持';}catch{$('#syncState').classList.remove('ready');$('#syncState').classList.add('error');$('#syncState').textContent='接続できません・表示内容を保持'}populateFilters();render();return synced;}
 document.addEventListener('click',event=>{
   const b=event.target.closest('button');if(!b)return;const action=b.dataset.action;
   if(b.dataset.game==='ten-saviors')showArchive();else if(b.dataset.id)openDetail(b.dataset.id);
   else if(b.dataset.category){activeCategory=b.dataset.category;$$('.category').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b))});render()}
   else if(action==='home')showHome();else if(action==='open-editor')openEditor();else if(action==='open-account')openAccount();else if(action==='close-detail')$('#detailDialog').close();else if(action==='close-editor')$('#editorDialog').close();else if(action==='close-account')$('#accountDialog').close();
   else if(action==='toggle-auth-mode'){authMode=authMode==='signin'?'signup':'signin';authMessage('');renderAccount()}
-  else if(action==='sign-out'){void signOut().then(()=>{authMessage('');proposalMessage('');renderAccount();accountMessage('ログアウトしました。')})}
+  else if(action==='sign-out'){void signOut().catch(()=>{}).finally(()=>{accessRequest++;access={canEdit:false,canPropose:false};cloudContext=null;$('#proposalForm').reset();$('#proposalEntry').innerHTML='';$('#cloudStatus').textContent='保存先を読み込んでください。';renderAccount();accountMessage('この端末からログアウトしました。')})}
+ else if(action?.startsWith('cloud-'))void cloudAction(action);
+ else if(action==='reload-entries')void load();
+ else if(action==='resolve-conflict'&&conflictEntry){$('#editorForm').elements.revision.value=conflictEntry.revision;$('#editConflict').classList.add('hidden');$('#formMessage').textContent='入力は保持しています。最新内容との調整が済んだら保存してください。';conflictEntry=null;}
   else if(action==='edit-current'){$('#detailDialog').close();openEditor(currentEntry)}
   else if(action==='toggle-tag')toggleTag(b.dataset.tag||'')
   else if(action==='toggle-favorite-tag')toggleFavoriteTag(b.dataset.tag||'')
@@ -191,11 +199,12 @@ $('#editorForm').addEventListener('submit',async event=>{
   const submit=f.querySelector('[type="submit"]');submit.disabled=true;$('#formMessage').textContent='保存しています…';
   try{
     const response=await fetch('/api/entries',{method:'POST',headers:await authHeaders({'content-type':'application/json'}),body:JSON.stringify(body)}),data=await response.json();
-    if(response.status===409){await load();const latest=entries.find(x=>x.id===body.id);if(latest)openEditor(latest);$('#formMessage').textContent='別の端末で更新されています。最新の内容を表示しました。編集内容を確認して保存してください。';return}
+    if(response.status===409){const refreshed=await load();conflictEntry=refreshed?entries.find(x=>x.id===body.id):null;if(conflictEntry){$('#conflictContent').textContent=[conflictEntry.title,conflictEntry.subtitle,conflictEntry.summary,conflictEntry.body,'タグ：'+(conflictEntry.tags||[]).join('、')].join('\n\n');$('#editConflict').classList.remove('hidden')}$('#formMessage').textContent='別の端末で更新されています。入力は残しています。最新内容と調整してから保存してください。';return}
     if(!response.ok)throw new Error(data.error||'保存できませんでした');
-    entries=entries.filter(x=>x.id!==data.entry.id).concat(prepareEntry(data.entry));populateFilters();render();$('#syncState').classList.add('ready');$('#editorDialog').close();
+    entries=entries.filter(x=>x.id!==data.entry.id).concat(prepareEntry(data.entry));populateFilters();render();$('#syncState').classList.add('ready');$('#syncState').classList.remove('error');$('#syncState').textContent='クラウド保存済み';$('#editorDialog').close();
   }catch(error){$('#formMessage').textContent=error.message||'保存できませんでした。'}finally{submit.disabled=false}
 });
 function markImageFailure(image){image.classList.add('image-failed');image.parentElement?.classList.add('image-unavailable')}
 $$('img').forEach(image=>{image.addEventListener('error',()=>markImageFailure(image));if(image.getAttribute('src')&&image.complete&&!image.naturalWidth)markImageFailure(image)});
-populateFilters();render();load();
+window.addEventListener('archive-auth-changed',()=>{cloudContext=null;access={canEdit:false,canPropose:false};renderAccount();void refreshAccess()});
+renderAccount();void refreshAccess();populateFilters();render();load();

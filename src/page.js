@@ -28,8 +28,8 @@ export function renderPage(config = {}) {
       <span><strong>TTowelve</strong><small>STORIES ON SCREEN</small></span>
     </button>
     <div class="top-actions">
-      <span class="sync" id="syncState"><i></i>同期を確認中</span>
-      <button class="icon-button account-button" data-action="open-account" aria-label="ログインと編集提案">♙ <span id="accountButtonLabel">ログイン</span></button>
+      <span class="sync" id="syncState" role="status"><i></i>同期を確認中</span><button type="button" class="secondary" data-action="reload-entries" aria-label="保存済みの図鑑を再読込">再読込</button>
+      <button class="icon-button account-button" data-action="open-account" aria-label="アカウントとクラウド保存">♙ <span id="accountButtonLabel">ログイン</span></button>
       <button class="icon-button" data-action="open-editor" aria-label="管理・編集">✦ <span>編集</span></button>
     </div>
   </header>
@@ -126,30 +126,30 @@ export function renderPage(config = {}) {
   <dialog class="editor-dialog" id="editorDialog">
     <form class="editor-card" id="editorForm">
       <header><div><div class="eyebrow">ARCHIVE EDITOR</div><h2 id="editorHeading">記録を追加</h2></div><button type="button" class="close" data-action="close-editor" aria-label="編集を閉じる">×</button></header>
-      <div class="editor-notice"><i></i><span><strong>クラウド編集</strong> 保存内容は、このサイトを開ける端末間で同期されます。</span></div>
+      <div class="editor-notice"><i></i><span><strong>クラウド編集</strong> 保存すると公開中の図鑑に反映されます。</span></div>
       <input type="hidden" name="id">
       <input type="hidden" name="revision" value="0">
       <div class="form-grid">
         <label><span>カテゴリー</span><select name="category" required><option value="weapons">武器種図鑑</option><option value="weaponItems">武器図鑑</option><option value="cards">カード図鑑</option><option value="medicines">薬図鑑</option><option value="jobs">ジョブ図鑑</option><option value="emblems">紋章図鑑</option><option value="rings">リンクリング図鑑</option><option value="enemies">敵図鑑＆攻略情報</option><option value="other">その他情報</option></select></label>
         <label><span>識別色</span><select name="accent"><option value="lime">ライム</option><option value="amber">アンバー</option><option value="silver">シルバー</option><option value="rose">ローズ</option><option value="violet">バイオレット</option><option value="ice">アイス</option><option value="sky">スカイ</option><option value="red">レッド</option><option value="teal">ティール</option></select></label>
       </div>
-      <label><span>名前</span><input name="title" required maxlength="80" placeholder="例：炎獣グラヴァ"></label>
+      <label><span>名前</span><input name="title" required maxlength="200" placeholder="例：炎獣グラヴァ"></label>
       <fieldset id="enemyEditor" class="enemy-editor hidden"><legend>敵の分類と出現情報</legend><label><span>分類</span><input name="enemyClass" list="enemyClassOptions" maxlength="40" placeholder="通常敵・強敵・ボスなど"><datalist id="enemyClassOptions"><option value="通常敵"><option value="強敵"><option value="ボス"></datalist></label><div class="form-grid"><label><span>章</span><input name="enemyChapter" maxlength="100" placeholder="一章「探究者の道」"></label><label><span>出現場所</span><input name="enemyLocation" maxlength="120" placeholder="アマガミ滝高地"></label></div><small>ここで指定した内容を詳細本文の「分類・章・出現場所」に反映します。</small></fieldset>
-      <label><span>分類・装備・現像元</span><input name="subtitle" maxlength="120" placeholder="例：発動武器：伸剣"></label>
-      <label><span>一覧用の短い説明</span><textarea name="summary" rows="2" maxlength="240" placeholder="特徴を一文で"></textarea></label>
-      <label><span>詳細情報</span><textarea name="body" rows="7" maxlength="6000" placeholder="技や効果は改行して入力できます"></textarea></label>
-      <label><span>タグ</span><input name="tags" maxlength="240" placeholder="ジョブ, 氷属性, 支援"></label>
+      <label><span>分類・装備・現像元</span><input name="subtitle" maxlength="1000" placeholder="例：発動武器：伸剣"></label>
+      <label><span>一覧用の短い説明</span><textarea name="summary" rows="2" maxlength="4000" placeholder="特徴を一文で"></textarea></label>
+      <label><span>詳細情報</span><textarea name="body" rows="7" maxlength="100000" placeholder="技や効果は改行して入力できます"></textarea></label>
+      <label><span>タグ</span><input name="tags" maxlength="20100" placeholder="ジョブ, 氷属性, 支援"></label>
       <div class="import-box"><button type="button" data-action="paste-ccfolia">ココフォリアのコピーを貼り付け</button><small>駒やパネルからコピーした文章を、詳細情報へ追加します。</small></div>
-      <p class="form-message" id="formMessage" role="status"></p>
-      <footer><button type="button" class="secondary" data-action="close-editor">キャンセル</button><button type="submit" class="primary">下書きを保存</button></footer>
+      <details id="editConflict" class="hidden"><summary>別の端末で保存された最新内容</summary><pre id="conflictContent" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><button type="button" class="secondary" data-action="resolve-conflict">最新内容を確認・調整したので再保存を可能にする</button></details><p class="form-message" id="formMessage" role="status"></p>
+      <footer><button type="button" class="secondary" data-action="close-editor">キャンセル</button><button type="submit" class="primary">変更を保存</button></footer>
     </form>
   </dialog>
 
   <dialog class="account-dialog" id="accountDialog">
     <article class="account-card">
       <button class="close" data-action="close-account" aria-label="アカウント画面を閉じる">×</button>
-      <div class="eyebrow">SUPABASE ACCOUNT</div>
-      <h2 id="accountHeading">ログインと編集提案</h2>
+      <div class="eyebrow">PLAYER ACCOUNT</div>
+      <h2 id="accountHeading">アカウントとクラウド保存</h2>
       <p class="account-lead" id="accountStatus" role="status" aria-live="polite">ログインすると、編集提案を送れます。</p>
       <section id="authPanel">
         <form id="authForm">
@@ -160,14 +160,14 @@ export function renderPage(config = {}) {
           <div class="account-actions"><button class="primary" id="authSubmit" type="submit">ログイン</button><button class="secondary" data-action="toggle-auth-mode" type="button">新規登録に切り替え</button></div>
         </form>
       </section>
-      <section id="proposalPanel" class="hidden">
+      <section id="signedInPanel" class="hidden"><h3>お気に入りを引き継ぐ</h3><p>図鑑・タグのお気に入りと比較用の固定項目を保存できます。通常の操作はこの端末に保存されます。</p><p id="cloudStatus" class="form-message" role="status">まず保存先を読み込んでください。復元すると、この端末のお気に入りと固定項目を置き換えます。</p><div class="account-actions"><button type="button" class="secondary" data-action="cloud-load">保存先を再読込</button><button type="button" class="primary" data-action="cloud-save" disabled>この端末の内容を保存</button><button type="button" class="secondary" data-action="cloud-restore" disabled>クラウドから復元</button></div><div class="account-actions"><button type="button" class="secondary" data-action="sign-out">ログアウト</button></div></section><section id="proposalPanel" class="hidden">
         <form id="proposalForm">
           <label><span>対象の図鑑</span><select id="proposalEntry" required></select></label>
           <label><span>提案タイトル</span><input id="proposalTitle" maxlength="200" required placeholder="例：分類名の修正案"></label>
           <label><span>概要</span><textarea id="proposalSummary" rows="2" maxlength="1000" placeholder="変更したい点を短く入力"></textarea></label>
-          <label><span>変更案本文</span><textarea id="proposalContent" rows="8" maxlength="6000" required placeholder="正しい本文や修正案を入力"></textarea></label>
+          <label><span>変更案本文</span><textarea id="proposalContent" rows="8" maxlength="100000" required placeholder="正しい本文や修正案を入力"></textarea></label>
           <p class="form-message" id="proposalMessage" role="status"></p>
-          <div class="account-actions"><button class="primary" id="proposalSubmit" type="submit">編集提案を送信</button><button class="secondary" data-action="sign-out" type="button">ログアウト</button></div>
+          <div class="account-actions"><button class="primary" id="proposalSubmit" type="submit">編集提案を送信</button></div>
         </form>
       </section>
     </article>
