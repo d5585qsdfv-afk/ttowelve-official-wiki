@@ -1,0 +1,1 @@
+export function DetailSection({ title, children, tone="default" }:{title:string; children:React.ReactNode; tone?:"default"|"note"|"warning"}) { return <section className="detail-section" data-tone={tone}><h2>{title}</h2>{children}</section>; }

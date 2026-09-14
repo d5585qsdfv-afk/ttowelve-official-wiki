@@ -1,0 +1,25 @@
+# Edge Functions validate the bearer token themselves so they can return
+# consistent 401/403/409 responses. The service role key is never sent here.
+[functions.wiki-save]
+verify_jwt = false
+
+[functions.wiki-restore]
+verify_jwt = false
+
+[functions.admin-role]
+verify_jwt = false
+
+[functions.admin-ban]
+verify_jwt = false
+
+[functions.moderate-comment]
+verify_jwt = false
+
+[functions.admin-profile]
+verify_jwt = false
+
+[functions.admin-users]
+verify_jwt = false
+
+[functions.wiki-create]
+verify_jwt = false
