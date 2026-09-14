@@ -75,6 +75,8 @@ export function renderPage() {
         <label class="sort">表示順<select id="sort"><option value="order">公式順</option><option value="title">名前順</option><option value="updated">更新順</option></select></label>
       </div>
 
+      <fieldset class="database-filters hidden" id="cardFilters"><legend>カードを絞り込む</legend><label>レベル<select id="cardLevel"><option value="">すべてのレベル</option></select></label><label>ロール<select id="cardRole"><option value="">すべてのロール</option></select></label><label>チャンネル<select id="cardChannel"><option value="">すべてのチャンネル</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
+      <fieldset class="database-filters medicine-filters hidden" id="medicineFilters"><legend>薬を絞り込む</legend><label>発動区分<select id="medicineTiming"><option value="">すべての区分</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
       <fieldset class="enemy-filters hidden" id="enemyFilters"><legend>敵の記録を絞り込む</legend><label>分類<select id="enemyClass"><option value="">すべての分類</option></select></label><label>章<select id="enemyChapter"><option value="">すべての章</option></select></label><label>出現場所<select id="enemyLocation"><option value="">すべての場所</option></select></label><button type="button" class="secondary" data-action="reset-enemy-filters">絞り込みを解除</button></fieldset>
       <div class="result-meta"><p id="resultTitle">収録情報</p><span id="resultCount" role="status" aria-live="polite"></span></div>
       <div class="entry-grid" id="entryGrid"></div>
