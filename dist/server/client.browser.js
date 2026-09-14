@@ -1,7 +1,8 @@
-import { enemyMetadata, updateEnemyBody } from '/entry-metadata.js';
+import { enemyMetadata, normalizeEnemyEntry, updateEnemyBody } from '/entry-metadata.js';
 import { decorateEntry, matchesTags, searchEntry } from '/tagging.js';
 const initial=window.__INITIAL_ENTRIES__||[];
-let entries=initial.map(decorateEntry),activeCategory='all',currentEntry=null;
+const prepareEntry=entry=>decorateEntry(normalizeEnemyEntry(entry));
+let entries=initial.map(prepareEntry),activeCategory='all',currentEntry=null;
 let selectedTags=new Set();
 const FAVORITE_TAGS_KEY='ttowelve.favorite-tags';
 let favoriteTags=readFavoriteTags();
@@ -108,7 +109,7 @@ function openEditor(entry){
   toggleEnemyEditor();$('#editorDialog').showModal();
 }
 async function load(){
-  try{const response=await fetch('/api/entries',{headers:{accept:'application/json'}});if(!response.ok)throw new Error();const data=await response.json();entries=(data.entries||initial).map(decorateEntry);$('#syncState').classList.remove('error');$('#syncState').classList.add('ready');$('#syncState').innerHTML='<i></i>クラウド同期'}
+  try{const response=await fetch('/api/entries',{headers:{accept:'application/json'}});if(!response.ok)throw new Error();const data=await response.json();entries=(data.entries||initial).map(prepareEntry);$('#syncState').classList.remove('error');$('#syncState').classList.add('ready');$('#syncState').innerHTML='<i></i>クラウド同期'}
   catch{$('#syncState').classList.add('error');$('#syncState').innerHTML='<i></i>初期データ表示中'}
   populateFilters();render();
 }
@@ -138,7 +139,7 @@ $('#editorForm').addEventListener('submit',async event=>{
     const response=await fetch('/api/entries',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),data=await response.json();
     if(response.status===409){await load();const latest=entries.find(x=>x.id===body.id);if(latest)openEditor(latest);$('#formMessage').textContent='別の端末で更新されています。最新の内容を表示しました。編集内容を確認して保存してください。';return}
     if(!response.ok)throw new Error(data.error||'保存できませんでした');
-    entries=entries.filter(x=>x.id!==data.entry.id).concat(decorateEntry(data.entry));populateFilters();render();$('#syncState').classList.add('ready');$('#editorDialog').close();
+    entries=entries.filter(x=>x.id!==data.entry.id).concat(prepareEntry(data.entry));populateFilters();render();$('#syncState').classList.add('ready');$('#editorDialog').close();
   }catch(error){$('#formMessage').textContent=error.message||'保存できませんでした。'}finally{submit.disabled=false}
 });
 function markImageFailure(image){image.classList.add('image-failed');image.parentElement?.classList.add('image-unavailable')}

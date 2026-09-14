@@ -2,7 +2,7 @@ import { defaultEntries } from './data.js';
 import { renderFavicon, renderPage } from './page.js';
 import { clientSource } from './client-asset.generated.js';
 import { assets } from './assets.generated.js';
-import { updateEnemyBody } from './entry-metadata.js';
+import { normalizeEnemyEntry, updateEnemyBody } from './entry-metadata.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const CATEGORY_SET = new Set(['weapons', 'weaponItems', 'cards', 'medicines', 'jobs', 'emblems', 'rings', 'enemies', 'other']);
@@ -38,7 +38,7 @@ function toEntry(row) {
 async function listEntries(env) {
   if (!env.DB) return defaultEntries;
   const result = await env.DB.prepare('SELECT * FROM entries WHERE is_deleted = 0 ORDER BY sort_order, title').all();
-  const stored = new Map((result.results || []).map(row => [row.id, toEntry(row)]));
+  const stored = new Map((result.results || []).map(row => [row.id, normalizeEnemyEntry(toEntry(row))]));
   for (const entry of defaultEntries) if (!stored.has(entry.id)) stored.set(entry.id, entry);
   return [...stored.values()];
 }
@@ -73,11 +73,12 @@ async function saveEntry(request, env) {
       location: cleanText(input.enemyLocation, 120),
     });
   }
+  const normalizedEntry = normalizeEnemyEntry(entry);
   await env.DB.prepare(`INSERT INTO entries (id, game, category, title, subtitle, summary, body, tags_json, accent, sort_order, revision, is_deleted, updated_at, updated_by)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
     ON CONFLICT(id) DO UPDATE SET category=excluded.category,title=excluded.title,subtitle=excluded.subtitle,summary=excluded.summary,body=excluded.body,tags_json=excluded.tags_json,accent=excluded.accent,revision=excluded.revision,is_deleted=0,updated_at=excluded.updated_at,updated_by=excluded.updated_by`)
-    .bind(entry.id, entry.game, entry.category, entry.title, entry.subtitle, entry.summary, entry.body, JSON.stringify(entry.tags), entry.accent, entry.sortOrder, entry.revision, now, user.userId).run();
-  return json({ saved: true, entry });
+    .bind(normalizedEntry.id, normalizedEntry.game, normalizedEntry.category, normalizedEntry.title, normalizedEntry.subtitle, normalizedEntry.summary, normalizedEntry.body, JSON.stringify(normalizedEntry.tags), normalizedEntry.accent, normalizedEntry.sortOrder, normalizedEntry.revision, now, user.userId).run();
+  return json({ saved: true, entry: normalizedEntry });
 }
 
 async function handle(request, env) {

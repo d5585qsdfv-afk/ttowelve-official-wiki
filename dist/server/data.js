@@ -6,6 +6,7 @@ import { enemyEntries } from './enemies.generated.js';
 import { starRailJobEntries, starRailBossEntries } from './starrail.generated.js';
 import { ccfoliaPanelEntries } from './ccfolia.panels.generated.js';
 import { canonicalJobClass, EXTERNAL_GAME_SOURCE, vundClassForEntry } from './vund-classes.js';
+import { normalizeEnemyEntry } from './entry-metadata.js';
 import { decorateEntry } from './tagging.js';
 
 export const GAME_ID = 'ten-saviors';
@@ -214,4 +215,8 @@ function prepareCatalogEntry(entry) {
   return prepared;
 }
 
-export const defaultEntries = [...uniqueEntries, ...individualWeaponEntries].map(prepareCatalogEntry).map(cleanCatalogEntry).map(decorateEntry);
+export const defaultEntries = [...uniqueEntries, ...individualWeaponEntries]
+  .map(prepareCatalogEntry)
+  .map(cleanCatalogEntry)
+  .map(normalizeEnemyEntry)
+  .map(decorateEntry);
