@@ -42,18 +42,17 @@ const BRIGHT_STORY_TITLES = new Set([
 ]);
 
 // These characters were explicitly identified as Adventure in the latest
-// roster. The source panel for ドラコニックウェポン is an Iris job and is
-// therefore handled by UNCLASSIFIED_TITLES below.
+// roster. The renamed Iris record is intentionally left unclassified.
 const ADVENTURE_TITLES = new Set([
   '天泣 鯆晴', '二本滝 鬼才', 'ライゼル・ハーク', 'L-00',
   '想依華&子龍', '桃次郎', '日川 林檎',
 ]);
 
 // These records are intentionally retained in the archive without a class.
-// In particular, the Dragonic Weapon panel belongs to Iris rather than being
-// a separate Adventure character.
+// The old base Iris record is removed; the imported, latest Iris record is
+// retained without a game/source class.
 const UNCLASSIFIED_TITLES = new Set([
-  '未草かなみ', '裕蓮 ふよう', 'イリス', 'ドラコニックウェポン(伸剣×伸剣)',
+  '未草かなみ', '裕蓮 ふよう', 'イリス',
 ]);
 
 const EXTERNAL_GAME_SOURCE = 'BRAVELY DEFAULT II／ゼンレスゾーンゼロ／ペルソナ5:The Phantom X／METAL GEAR RISING:REVENGEANCE／アサシンクリードII';

@@ -10,41 +10,6 @@ export const GAME_ID = 'ten-saviors';
 
 const baseEntries = [
   {
-    id: 'job-hikawa-ringo', category: 'jobs', title: '日川 林檎',
-    subtitle: '札箱', accent: 'lime', sortOrder: 10,
-    summary: 'カードの入れ替えと抽選を軸に、状況へ柔軟に対応するジョブ。',
-    tags: ['ジョブ', '札箱', 'サポート'],
-    body: 'カードチェンジ｜戦闘中にセット済みのカードを入れ替える。\nカード抽選｜毎ターン開始時、入手済みのカードからランダムなサポート／カウンターカードを使用する。\nVUNDアルティメット：マンマリンゴ｜発動ターン中、好きなカードを3枚使用できる。'
-  },
-  {
-    id: 'job-l00', category: 'jobs', title: 'L-00',
-    subtitle: '拳具（クロー）', accent: 'rose', sortOrder: 20,
-    summary: '弱体化、回復分配、自己消費への反応を組み合わせる近接ジョブ。',
-    tags: ['ジョブ', '拳具', '弱体化'],
-    body: '牙鱗削ぎ｜敵単体の攻撃威力を下げ、被ダメージを増加させる武器攻撃。\n血液供給｜「静心」の回復量の一部を味方へ分配する。\nVUNDアルティメット：ブラッドクラッシュ｜無属性イマジンダメージを与え、固有スタックを獲得する。'
-  },
-  {
-    id: 'job-iris', category: 'jobs', title: 'イリス',
-    subtitle: '伸剣', accent: 'violet', sortOrder: 30,
-    summary: '二本の伸剣と「魔のバイド」を運用する、攻撃的なジョブ。',
-    tags: ['ジョブ', '伸剣', '魔のバイド'],
-    body: 'アイルバイド〈蝕〉｜魔のバイドとHPを消費し、次回行動時の攻撃を強化する。\n伝説級武器調整術｜条件を満たす伸剣を二つ所持できる。\nVUNDアルティメット：クロスバイド・裂｜敵全体を攻撃し、ターン終了時にメモリアルダメージを与える。'
-  },
-  {
-    id: 'job-hoshimi-miyabi', category: 'jobs', title: '星見雅',
-    subtitle: '斬刀', accent: 'ice', sortOrder: 40,
-    summary: '「落霜」を蓄積し、溜め段階に応じて斬撃を大きく強化するジョブ。',
-    tags: ['ジョブ', '斬刀', '氷属性'],
-    body: '飛雪｜斬刀による攻撃で「落霜」を獲得する。\n寒炎｜氷属性を霜烈属性へ変換し、固有状態を付与する。\nVUNDアルティメット：なごり雪｜敵全体を攻撃し、「落霜」を獲得する。'
-  },
-  {
-    id: 'emblem-history-personality', category: 'emblems', title: '歴と性格',
-    subtitle: '現像元：十の救現主／イズール', accent: 'amber', sortOrder: 10,
-    summary: 'VUNDアルティメット使用後、一定確率でもう一度必殺技を使用可能にする紋章。',
-    tags: ['紋章', 'イズール', 'アルティメット'],
-    body: '紋章効果｜VUNDアルティメット使用後、30％の確率でもう一度必殺技を使用可能にする。連続発動は一回まで。'
-  },
-  {
     id: 'emblem-counter-signal', category: 'emblems', title: '反撃の狼煙',
     subtitle: '現像元：十の救現主／トレンシス', accent: 'orange', sortOrder: 20,
     summary: 'リンクリング使用時の攻撃威力と回復量を強化する紋章。',
