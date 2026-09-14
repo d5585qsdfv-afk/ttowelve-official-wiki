@@ -2,7 +2,7 @@ import { enemyMetadata, normalizeEnemyEntry, updateEnemyBody } from '/entry-meta
 import { normalizeWeaponEntry, weaponDisplayMetadata } from '/weapon-metadata.js';
 import { decorateEntry, matchesTags, searchEntry } from '/tagging.js';
 import { MAX_PINNED_ENTRIES, normalizePinnedIds, pinnedEntries, togglePinnedIds } from '/pin-state.js';
-import { authHeaders, currentSession, currentUser, isSupabaseConfigured, signIn, signOut, signUp, submitWikiProposal } from '/supabase-bridge.js';
+import { authHeaders, currentSession, currentUser, isSupabaseConfigured, signIn, signOut, signUp, submitWikiProposal } from '/supabase-bridge.js?v=2';
 const initial=window.__INITIAL_ENTRIES__||[];
 const prepareEntry=entry=>decorateEntry(normalizeWeaponEntry(normalizeEnemyEntry(entry)));
 let entries=initial.map(prepareEntry),activeCategory='all',currentEntry=null;

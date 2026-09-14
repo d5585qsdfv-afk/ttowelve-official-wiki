@@ -244,7 +244,8 @@ async function handle(request, env) {
   if (asset) {
     if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 });
     const bytes = request.method === 'HEAD' ? null : Uint8Array.from(atob(asset.base64), c => c.charCodeAt(0));
-    return new Response(bytes, { headers: { 'content-type': asset.type, 'cache-control': 'public, max-age=3600', 'x-content-type-options': 'nosniff' } });
+    const cacheControl = asset.type.startsWith('text/javascript') ? 'no-cache' : 'public, max-age=3600';
+    return new Response(bytes, { headers: { 'content-type': asset.type, 'cache-control': cacheControl, 'x-content-type-options': 'nosniff' } });
   }
   if (url.pathname.startsWith('/assets/')) return new Response('Image not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8', 'x-content-type-options': 'nosniff' } });
   if (url.pathname === '/favicon.svg') return new Response(renderFavicon(), { headers: { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=86400' } });
