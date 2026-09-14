@@ -85,6 +85,12 @@ export function renderPage() {
         <p class="tag-filter-status" id="tagFilterStatus" role="status" aria-live="polite"></p>
       </section>
 
+      <section class="pinned-panel" id="pinnedPanel" aria-labelledby="pinnedTitle">
+        <header class="pinned-panel-heading"><div><span class="tag-browser-kicker">COMPARE DESK</span><h2 id="pinnedTitle">固定詳細 <span id="pinnedCount">0/4</span></h2></div><button type="button" class="secondary" data-action="clear-pinned">固定をすべて解除</button></header>
+        <p class="pin-status" id="pinStatus" role="status" aria-live="polite">最大4件まで固定できます。武器やジョブを並べて効果を比較できます。</p>
+        <div class="pinned-grid" id="pinnedGrid"></div>
+      </section>
+
       <fieldset class="database-filters hidden" id="cardFilters"><legend>カードを絞り込む</legend><label>レベル<select id="cardLevel"><option value="">すべてのレベル</option></select></label><label>ロール<select id="cardRole"><option value="">すべてのロール</option></select></label><label>チャンネル<select id="cardChannel"><option value="">すべてのチャンネル</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
       <fieldset class="database-filters medicine-filters hidden" id="medicineFilters"><legend>薬を絞り込む</legend><label>発動区分<select id="medicineTiming"><option value="">すべての区分</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
       <fieldset class="database-filters hidden" id="jobFilters"><legend>ジョブをクラスで絞り込む</legend><label>クラス<select id="jobClass"><option value="">すべてのクラス</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
@@ -99,6 +105,7 @@ export function renderPage() {
     <article class="detail-card">
       <button class="close" data-action="close-detail" aria-label="詳細を閉じる">×</button>
       <button type="button" class="detail-favorite" id="detailFavorite" data-action="toggle-favorite-current" aria-pressed="false">☆ お気に入りに追加</button>
+      <button type="button" class="detail-pin" id="detailPin" data-action="toggle-pin-current" aria-pressed="false">□ 詳細を固定</button>
       <div class="detail-accent" id="detailAccent"></div>
       <img class="detail-image hidden" id="detailImage" alt="">
       <div class="detail-kind" id="detailKind"></div>

@@ -1,14 +1,16 @@
 import { enemyMetadata, normalizeEnemyEntry, updateEnemyBody } from '/entry-metadata.js';
 import { normalizeWeaponEntry, weaponDisplayMetadata } from '/weapon-metadata.js';
 import { decorateEntry, matchesTags, searchEntry } from '/tagging.js';
+import { MAX_PINNED_ENTRIES, normalizePinnedIds, pinnedEntries, togglePinnedIds } from '/pin-state.js';
 const initial=window.__INITIAL_ENTRIES__||[];
 const prepareEntry=entry=>decorateEntry(normalizeWeaponEntry(normalizeEnemyEntry(entry)));
 let entries=initial.map(prepareEntry),activeCategory='all',currentEntry=null;
 let selectedTags=new Set();
 const FAVORITE_TAGS_KEY='ttowelve.favorite-tags';
 const FAVORITE_ENTRIES_KEY='ttowelve.favorite-entries';
+const PINNED_ENTRIES_KEY='ttowelve.pinned-entries';
 let favoriteTags=readFavoriteTags();
-let favoriteEntryIds=readFavoriteEntryIds(),favoriteOnly=false;
+let favoriteEntryIds=readFavoriteEntryIds(),pinnedEntryIds=readPinnedEntryIds(),favoriteOnly=false,pinNotice='';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const labels={all:'収録情報',weapons:'武器種図鑑',weaponItems:'武器図鑑',cards:'カード図鑑',medicines:'薬図鑑',jobs:'ジョブ図鑑',emblems:'紋章図鑑',rings:'リンクリング図鑑',enemies:'敵図鑑＆攻略情報',other:'戦闘・報酬'};
 const vundClasses=['Gamers','Collapse','Adventure','Sun','Mirror','Saver','Reverse','Mixing','StarRail','Genshin','Bright&Story','#Compass'];
@@ -22,11 +24,16 @@ function readFavoriteTags(){try{const value=JSON.parse(localStorage.getItem(FAVO
 function saveFavoriteTags(){try{localStorage.setItem(FAVORITE_TAGS_KEY,JSON.stringify([...favoriteTags]))}catch{}}
 function readFavoriteEntryIds(){try{const value=JSON.parse(localStorage.getItem(FAVORITE_ENTRIES_KEY)||'[]');return new Set(Array.isArray(value)?value.filter(id=>typeof id==='string'&&id.trim()):[])}catch{return new Set()}}
 function saveFavoriteEntryIds(){try{localStorage.setItem(FAVORITE_ENTRIES_KEY,JSON.stringify([...favoriteEntryIds]))}catch{}}
+function readPinnedEntryIds(){try{return normalizePinnedIds(JSON.parse(localStorage.getItem(PINNED_ENTRIES_KEY)||'[]'))}catch{return []}}
+function savePinnedEntryIds(){try{localStorage.setItem(PINNED_ENTRIES_KEY,JSON.stringify(pinnedEntryIds))}catch{}}
 function toggleTag(tag){if(selectedTags.has(tag))selectedTags.delete(tag);else selectedTags.add(tag);render()}
 function toggleFavoriteTag(tag){if(favoriteTags.has(tag))favoriteTags.delete(tag);else favoriteTags.add(tag);saveFavoriteTags();renderTagBrowser()}
 function toggleFavoriteEntry(id){if(!id)return;if(favoriteEntryIds.has(id))favoriteEntryIds.delete(id);else favoriteEntryIds.add(id);saveFavoriteEntryIds();render();updateDetailFavorite()}
+function togglePinnedEntry(id){const result=togglePinnedIds(pinnedEntryIds,id,MAX_PINNED_ENTRIES);if(!result.changed){pinNotice=result.reason==='limit'?`同時表示できる詳細は最大${MAX_PINNED_ENTRIES}件です。固定を外してから追加してください。`:'';render();return}pinnedEntryIds=result.ids;pinNotice='';savePinnedEntryIds();render();updateDetailControls()}
+function clearPinned(){pinnedEntryIds=[];pinNotice='';savePinnedEntryIds();render();updateDetailControls()}
 function toggleFavoriteFilter(){favoriteOnly=!favoriteOnly;render()}
-function updateDetailFavorite(){const button=$('#detailFavorite');if(!button||!currentEntry)return;const active=favoriteEntryIds.has(currentEntry.id);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));button.textContent=active?'★ お気に入り登録済み':'☆ お気に入りに追加'}
+function updateDetailControls(){if(!currentEntry)return;const favoriteButton=$('#detailFavorite'),pinButton=$('#detailPin'),favorite=favoriteEntryIds.has(currentEntry.id),pinned=pinnedEntryIds.includes(currentEntry.id);if(favoriteButton){favoriteButton.classList.toggle('active',favorite);favoriteButton.setAttribute('aria-pressed',String(favorite));favoriteButton.textContent=favorite?'★ お気に入り登録済み':'☆ お気に入りに追加'}if(pinButton){pinButton.classList.toggle('active',pinned);pinButton.setAttribute('aria-pressed',String(pinned));pinButton.textContent=pinned?'▣ 固定を外す':'□ 詳細を固定'}}
+function updateDetailFavorite(){updateDetailControls()}
 function tagCounts(){const counts=new Map(),scope=activeCategory==='all'?entries:entries.filter(entry=>entry.category===activeCategory);for(const entry of scope)for(const tag of entry.tags||[])counts.set(tag,(counts.get(tag)||0)+1);return counts}
 function renderTagBrowser(){
   const counts=tagCounts(),query=($('#tagSearch')?.value||'').trim().toLocaleLowerCase('ja-JP');
@@ -38,6 +45,11 @@ function renderTagBrowser(){
   $('#favoriteTags').innerHTML=favoriteEntryOption+favoriteTagOptions;
   $('#tagFilters').innerHTML=visible.length?visible.map(([tag,count])=>`<span class="tag-option"><button type="button" class="tag-chip ${selectedTags.has(tag)?'selected':''}" data-action="toggle-tag" data-tag="${esc(tag)}" aria-pressed="${selectedTags.has(tag)}">${esc(tag)} <small>${count}</small></button><button type="button" class="tag-star ${favoriteTags.has(tag)?'active':''}" data-action="toggle-favorite-tag" data-tag="${esc(tag)}" aria-label="${esc(tag)}をお気に入り${favoriteTags.has(tag)?'から外す':'に追加'}">${favoriteTags.has(tag)?'★':'☆'}</button></span>`).join(''):'<span class="tag-empty">一致するタグがありません。</span>';
   const selected=[...selectedTags],status=[];if(favoriteOnly)status.push(`お気に入り図鑑 ${favoriteCount}件`);if(selected.length)status.push(`タグ：${selected.join('、')}（AND検索）`);$('#tagFilterStatus').textContent=status.length?`選択中：${status.join(' ／ ')}`:`タグを選ぶと、該当する記録だけを表示します。★で図鑑項目、☆でタグをお気に入りに追加できます。`;
+}
+function renderPinnedEntries(){
+  const section=$('#pinnedPanel'),grid=$('#pinnedGrid'),count=$('#pinnedCount'),notice=$('#pinStatus');if(!section||!grid)return;
+  const items=pinnedEntries(entries,pinnedEntryIds);count.textContent=`${items.length}/${MAX_PINNED_ENTRIES}`;notice.textContent=pinNotice||`最大${MAX_PINNED_ENTRIES}件まで固定できます。武器やジョブを並べて効果を比較できます。`;
+  grid.innerHTML=items.length?items.map(entry=>`<article class="pinned-entry" style="--accent:${accents[entry.accent]||accents.lime}"><header><div><span class="pinned-kind">${esc(labels[entry.category]||entry.category)}</span><button type="button" class="pinned-title" data-id="${esc(entry.id)}">${esc(entry.title)}</button><p>${esc(entry.subtitle||'')}</p></div><button type="button" class="pinned-unpin" data-action="toggle-pin-entry" data-entry-id="${esc(entry.id)}" aria-label="${esc(entry.title)}の固定を外す">×</button></header>${entry.summary?`<p class="pinned-summary">${esc(entry.summary)}</p>`:''}<div class="pinned-body">${esc(entry.body||'')}</div><div class="tag-list">${(entry.tags||[]).map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div></article>`).join(''):'<div class="pinned-empty">一覧や詳細画面の「□ 詳細を固定」から、比較したい図鑑を追加してください。</div>';
 }
 function showArchive(){$('#modeSelect').classList.add('hidden');$('#archive').classList.remove('hidden');document.body.classList.add('archive-view');window.scrollTo({top:0});render()}
 function showHome(){$('#archive').classList.add('hidden');$('#modeSelect').classList.remove('hidden');document.body.classList.remove('archive-view');window.scrollTo({top:0})}
@@ -93,14 +105,15 @@ function filtered(){
   return list.sort(sort==='title'?(a,b)=>a.title.localeCompare(b.title,'ja'):sort==='updated'?(a,b)=>(b.updatedAt||0)-(a.updatedAt||0):(a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
 }
 function render(){
-  const list=filtered();renderTagBrowser();$('#countAll').textContent=entries.length;$('#resultTitle').textContent=labels[activeCategory];$('#resultCount').textContent=list.length+'件';$('#empty').classList.toggle('hidden',list.length>0);$('#enemyFilters').classList.toggle('hidden',activeCategory!=='enemies');$('#cardFilters').classList.toggle('hidden',activeCategory!=='cards');$('#medicineFilters').classList.toggle('hidden',activeCategory!=='medicines');$('#jobFilters').classList.toggle('hidden',activeCategory!=='jobs');
+  const list=filtered();renderTagBrowser();renderPinnedEntries();$('#countAll').textContent=entries.length;$('#resultTitle').textContent=labels[activeCategory];$('#resultCount').textContent=list.length+'件';$('#empty').classList.toggle('hidden',list.length>0);$('#enemyFilters').classList.toggle('hidden',activeCategory!=='enemies');$('#cardFilters').classList.toggle('hidden',activeCategory!=='cards');$('#medicineFilters').classList.toggle('hidden',activeCategory!=='medicines');$('#jobFilters').classList.toggle('hidden',activeCategory!=='jobs');
   $('#entryGrid').innerHTML=list.map(e=>{
     const meta=e.category==='enemies'?enemyCardMetadata(e):null,weapon=['weapons','weaponItems'].includes(e.category)?weaponMetadata(e):null,job=e.category==='jobs'?jobMetadata(e):null;
     const card=e.category==='cards'?cardMetadata(e):null,medicine=e.category==='medicines'?medicineMetadata(e):null;
     const cardClass=[meta?'enemy-entry':weapon?'weapon-entry':medicine?'medicine-entry':'',e.image?'has-image':'',e.status&&e.status!=='実装済み'?'pending-entry':''].filter(Boolean).join(' ');
     const quickFacts=weapon?`<dl class="entry-stats weapon-stats"><div><dt>${weapon.individual?"武器種":"戦術タイプ"}</dt><dd>${esc(weapon.tacticalType)}</dd></div><div><dt>${weapon.individual?"属性":"系統"}</dt><dd>${esc(weapon.type)}</dd></div><div><dt>基礎</dt><dd>${esc(weapon.damage)}</dd></div><div><dt>属性倍率</dt><dd>${esc(weapon.multiplier)}</dd></div></dl><p class="entry-classification"><span>${weapon.individual?"資料区分":"戦闘特性"}</span>${esc(weapon.classification)}</p>`:meta?`<dl class="entry-stats enemy-stats"><div><dt>VUNDクラス</dt><dd>${esc(meta.vundClass||'—')}</dd></div><div><dt>HP</dt><dd>${esc(meta.hp)}</dd></div><div><dt>章</dt><dd>${esc(meta.chapter)}</dd></div><div class="wide"><dt>出現場所</dt><dd>${esc(meta.location)}</dd></div></dl><p class="affinity" aria-label="属性相性">${esc(meta.affinity)}</p><p class="enemy-action"><span>主な行動</span>${esc(meta.action)}</p>`:'';
     const favorite=favoriteEntryIds.has(e.id);
-    return `<article class="entry ${cardClass}" style="--accent:${accents[e.accent]||accents.lime}"><button type="button" class="entry-hit" data-id="${esc(e.id)}" aria-label="${esc(e.title)}の詳細を開く">${e.image?`<span class="entry-media"><img src="${esc(e.image)}" alt="${esc(e.imageAlt||e.title)}" loading="lazy"></span>`:''}<span class="entry-overline"><span class="entry-kind">${esc(labels[e.category]||e.category)}</span>${meta?`<span class="enemy-class-badge">◇ ${esc(meta.vundClass||meta.classification)}</span>`:e.status&&e.status!=='実装済み'?`<span class="status-badge">${esc(e.status)}</span>`:weapon?`<span class="weapon-type-badge">${esc(weapon.tacticalType)}</span>`:job?`<span class="weapon-type-badge">${esc(job.characterClass)}</span>`:''}</span><h2>${esc(e.title)}</h2>${meta?`<span class="subtitle">${esc(meta.number)}${meta.vundClass?`｜${esc(meta.vundClass)}`:''}</span>`:!weapon?`<span class="subtitle">${esc(e.subtitle)}</span>`:''}${quickFacts}${job?`<span class="entry-facts">クラス｜${esc(job.characterClass)}${job.sourceClass&&job.characterClass==='クラス未確定'?`｜原典｜${esc(job.sourceClass)}`:''}</span>`:''}${card?`<span class="entry-facts">Lv.${card.levels.join(' · ')}｜${esc(card.role)}｜${esc(card.channel==='セット発動'?'セット':'CH '+normalizeDigits(card.channel))}</span>`:''}${medicine?`<span class="entry-facts">${esc(medicine.timing)}｜調合薬</span>`:''}<p class="summary">${esc(e.summary)}</p><footer><span class="tags">${(e.tags||[]).filter(tag=>!weapon||![weapon.tacticalType,weapon.type].includes(tag)).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</span><span class="entry-open">詳細 <span aria-hidden="true">↗</span></span></footer></button><button type="button" class="entry-favorite ${favorite?'active':''}" data-action="toggle-favorite-entry" data-entry-id="${esc(e.id)}" aria-pressed="${favorite}" aria-label="${esc(e.title)}をお気に入り${favorite?'から外す':'に追加'}">${favorite?'★':'☆'}</button></article>`;
+    const pinned=pinnedEntryIds.includes(e.id);
+    return `<article class="entry ${cardClass}" style="--accent:${accents[e.accent]||accents.lime}"><button type="button" class="entry-hit" data-id="${esc(e.id)}" aria-label="${esc(e.title)}の詳細を開く">${e.image?`<span class="entry-media"><img src="${esc(e.image)}" alt="${esc(e.imageAlt||e.title)}" loading="lazy"></span>`:''}<span class="entry-overline"><span class="entry-kind">${esc(labels[e.category]||e.category)}</span>${meta?`<span class="enemy-class-badge">◇ ${esc(meta.vundClass||meta.classification)}</span>`:e.status&&e.status!=='実装済み'?`<span class="status-badge">${esc(e.status)}</span>`:weapon?`<span class="weapon-type-badge">${esc(weapon.tacticalType)}</span>`:job?`<span class="weapon-type-badge">${esc(job.characterClass)}</span>`:''}</span><h2>${esc(e.title)}</h2>${meta?`<span class="subtitle">${esc(meta.number)}${meta.vundClass?`｜${esc(meta.vundClass)}`:''}</span>`:!weapon?`<span class="subtitle">${esc(e.subtitle)}</span>`:''}${quickFacts}${job?`<span class="entry-facts">クラス｜${esc(job.characterClass)}${job.sourceClass&&job.characterClass==='クラス未確定'?`｜原典｜${esc(job.sourceClass)}`:''}</span>`:''}${card?`<span class="entry-facts">Lv.${card.levels.join(' · ')}｜${esc(card.role)}｜${esc(card.channel==='セット発動'?'セット':'CH '+normalizeDigits(card.channel))}</span>`:''}${medicine?`<span class="entry-facts">${esc(medicine.timing)}｜調合薬</span>`:''}<p class="summary">${esc(e.summary)}</p><footer><span class="tags">${(e.tags||[]).filter(tag=>!weapon||![weapon.tacticalType,weapon.type].includes(tag)).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</span><span class="entry-open">詳細 <span aria-hidden="true">↗</span></span></footer></button><div class="entry-actions"><button type="button" class="entry-favorite ${favorite?'active':''}" data-action="toggle-favorite-entry" data-entry-id="${esc(e.id)}" aria-pressed="${favorite}" aria-label="${esc(e.title)}をお気に入り${favorite?'から外す':'に追加'}">${favorite?'★':'☆'}</button><button type="button" class="entry-pin ${pinned?'active':''}" data-action="toggle-pin-entry" data-entry-id="${esc(e.id)}" aria-pressed="${pinned}" aria-label="${esc(e.title)}の詳細を${pinned?'固定解除':'固定'}">${pinned?'▣':'□'}</button></div></article>`;
   }).join('');
   $$('#entryGrid img').forEach(image=>{image.addEventListener('error',()=>markImageFailure(image));if(image.complete&&!image.naturalWidth)markImageFailure(image)});
 }
@@ -109,7 +122,7 @@ function openDetail(id){
   $('#detailAccent').style.background=accents[currentEntry.accent]||accents.lime;$('#detailKind').textContent=labels[currentEntry.category];$('#detailTitle').textContent=currentEntry.title;$('#detailSubtitle').textContent=currentEntry.subtitle||'';$('#detailSummary').textContent=currentEntry.summary||'';$('#detailBody').textContent=currentEntry.body||'';$('#detailSource').textContent=(currentEntry.source||'クラウド編集')+'｜改訂 '+(currentEntry.revision||0);$('#detailTags').innerHTML=(currentEntry.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');const detailImage=$('#detailImage');detailImage.classList.remove('image-failed');detailImage.parentElement?.classList.remove('image-unavailable');detailImage.classList.toggle('hidden',!currentEntry.image);detailImage.src=currentEntry.image||'';detailImage.alt=currentEntry.imageAlt||currentEntry.title;
   const isEnemy=currentEntry.category==='enemies';$('#detailEnemyFacts').classList.toggle('hidden',!isEnemy);
   if(isEnemy){const meta=enemyMetadata(currentEntry);$('#detailEnemyFacts').innerHTML=[['VUNDクラス',meta.vundClass||'—'],['分類',meta.classification],['章',meta.chapter],['出現場所',meta.location]].map(([label,value])=>`<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}
-  updateDetailFavorite();
+  updateDetailControls();
   $('#detailDialog').showModal();
 }
 function toggleEnemyEditor(){const enemy=$('#editorForm').elements.category.value==='enemies';$('#enemyEditor').classList.toggle('hidden',!enemy);$('#enemyEditor').disabled=!enemy}
@@ -137,6 +150,9 @@ document.addEventListener('click',event=>{
   else if(action==='toggle-favorite-tag')toggleFavoriteTag(b.dataset.tag||'')
   else if(action==='toggle-favorite-entry')toggleFavoriteEntry(b.dataset.entryId||'')
   else if(action==='toggle-favorite-current')toggleFavoriteEntry(currentEntry?.id||'')
+  else if(action==='toggle-pin-entry')togglePinnedEntry(b.dataset.entryId||'')
+  else if(action==='toggle-pin-current')togglePinnedEntry(currentEntry?.id||'')
+  else if(action==='clear-pinned')clearPinned()
   else if(action==='toggle-favorite-filter')toggleFavoriteFilter()
   else if(action==='clear-tags'){selectedTags.clear();favoriteOnly=false;render()}
   else if(action==='reset-enemy-filters'){filterFields.forEach(([selector])=>$(selector).value='');$('#search').value='';selectedTags.clear();render()}
