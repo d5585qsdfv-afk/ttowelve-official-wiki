@@ -1,8 +1,8 @@
 /*
-  Cloudflare Pages security headers.
-  Supabase Auth/API access uses fetch from the browser, so this intentionally
-  does not add a restrictive CSP until the deployed asset and auth flows are
-  reviewed in the real Pages domain.
+# Cloudflare Pages security headers.
+# Supabase Auth/API access uses fetch from the browser, so this intentionally
+# does not add a restrictive CSP until the deployed asset and auth flows are
+# reviewed in the real Pages domain.
 */
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
