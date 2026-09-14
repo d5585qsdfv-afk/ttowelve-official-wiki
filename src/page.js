@@ -40,7 +40,7 @@ export function renderPage() {
       <div class="mode-grid">
         <button class="mode-card active" data-game="ten-saviors">
           <span class="mode-number">01</span><span class="mode-art"><img src="/assets/ten-saviors.webp" alt="十の救現主のキービジュアル"><i>十</i></span>
-          <span class="mode-copy"><span class="showing">NOW SHOWING / SCREEN 01</span><strong>十の救現主</strong><small>現代 × ファンタジー<br>世界を知り、戦いの記録をひらく。</small></span><span class="arrow">入場する ↗</span>
+          <span class="mode-copy"><span class="showing">NOW SHOWING / SCREEN 01</span><strong>十の救現主</strong><small>現実 × ファンタジー<br>世界を知り、戦いの記録をひらく。</small></span><span class="arrow">入場する ↗</span>
         </button>
         <button class="mode-card disabled" data-game="soleil" disabled>
           <span class="mode-number">02</span><span class="mode-art"><img src="/assets/soleil.webp" alt="ソレイユの伝承：エナルゴス戦記のキービジュアル"><i>陽</i></span>
@@ -55,7 +55,7 @@ export function renderPage() {
 
     <section class="archive hidden" id="archive" aria-labelledby="archiveTitle">
       <div class="archive-heading">
-        <div class="archive-intro"><button class="back" data-action="home">← 映画館ロビーへ</button><div class="eyebrow">SCREEN 01 / THE TEN SAVIORS</div><h1 id="archiveTitle">十の救現主</h1><p class="archive-description">現代と幻想が交わる、その先へ。</p><div class="archive-subline"><span>WORLD ARCHIVE</span><span>属性 × 攻撃分類</span><span>状態異常 × 蓄積</span></div></div>
+        <div class="archive-intro"><button class="back" data-action="home">← 映画館ロビーへ</button><div class="eyebrow">SCREEN 01 / THE TEN SAVIORS</div><h1 id="archiveTitle">十の救現主</h1><p class="archive-description">現実と空想が交わる、その先へ。</p><div class="archive-subline"><span>WORLD ARCHIVE</span><span>属性 × 攻撃分類</span><span>状態異常 × 蓄積</span></div></div>
         <div class="archive-branding"><div class="archive-keyvisual"><img src="/assets/ten-saviors.webp" alt="金と銀の光、翼と円環が交わる十の救現主のキービジュアル"></div><div class="game-logo"><img src="/assets/ten-saviors-logo.png" alt="十の救現主 ロゴ"></div></div>
       </div>
 
