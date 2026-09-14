@@ -1,5 +1,5 @@
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { extname, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const dist = resolve(root, 'dist');
@@ -18,11 +18,10 @@ await cp(resolve(root, 'public'), resolve(dist, 'out'), { recursive: true });
 // Bundle the existing artwork with the Worker: this host does not supply an
 // automatic static-file binding for dist/out. Never send the HTML fallback for assets.
 const assets = {};
-for (const [name, type] of Object.entries({
-  'ttowelve-studio.webp': 'image/webp', 'ten-saviors.webp': 'image/webp',
-  'soleil.webp': 'image/webp', 'idlet.webp': 'image/webp',
-  'ten-saviors-logo.png': 'image/png',
-})) {
+const mediaTypes = { '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml' };
+for (const name of await readdir(resolve(root, 'public', 'assets'))) {
+  const type = mediaTypes[extname(name).toLowerCase()];
+  if (!type) continue;
   assets['/assets/' + name] = { type, base64: (await readFile(resolve(root, 'public', 'assets', name))).toString('base64') };
 }
 assets['/entry-metadata.js'] = { type: 'text/javascript; charset=utf-8', base64: (await readFile(resolve(root, 'src', 'entry-metadata.js'))).toString('base64') };

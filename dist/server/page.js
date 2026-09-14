@@ -88,6 +88,7 @@ export function renderPage() {
     <article class="detail-card">
       <button class="close" data-action="close-detail" aria-label="詳細を閉じる">×</button>
       <div class="detail-accent" id="detailAccent"></div>
+      <img class="detail-image hidden" id="detailImage" alt="">
       <div class="detail-kind" id="detailKind"></div>
       <h2 id="detailTitle"></h2><p class="detail-subtitle" id="detailSubtitle"></p>
       <dl class="enemy-facts hidden" id="detailEnemyFacts"></dl>

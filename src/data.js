@@ -2,6 +2,7 @@ import { weaponEntries } from './weapons.generated.js';
 import { cardEntries } from './cards.generated.js';
 import { medicineEntries } from './medicines.generated.js';
 import { enemyEntries } from './enemies.generated.js';
+import { starRailJobEntries, starRailBossEntries } from './starrail.generated.js';
 
 export const GAME_ID = 'ten-saviors';
 
@@ -169,7 +170,7 @@ const baseEntries = [
   },
 ];
 
-const allEntries = [...weaponEntries, ...cardEntries, ...medicineEntries, ...baseEntries, ...enemyEntries];
+const allEntries = [...weaponEntries, ...cardEntries, ...medicineEntries, ...baseEntries, ...starRailJobEntries, ...enemyEntries, ...starRailBossEntries];
 const uniqueEntries = allEntries.filter((entry, index, source) =>
   index === source.findIndex((candidate) => candidate.category === entry.category &&
     (entry.category === 'enemies' ? candidate.id === entry.id : candidate.title === entry.title))
