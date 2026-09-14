@@ -77,6 +77,14 @@ export function renderPage() {
         <label class="sort">表示順<select id="sort"><option value="order">公式順</option><option value="title">名前順</option><option value="updated">更新順</option></select></label>
       </div>
 
+      <section class="tag-browser" aria-labelledby="tagBrowserTitle">
+        <div class="tag-browser-heading"><div><span class="tag-browser-kicker">QUICK FILTER</span><h2 id="tagBrowserTitle">タグで探す</h2></div><button type="button" class="secondary tag-clear" data-action="clear-tags">選択を解除</button></div>
+        <div class="favorite-row"><span class="favorite-label">お気に入り</span><div class="favorite-tags" id="favoriteTags"><span class="tag-empty">まだありません。☆で追加できます。</span></div></div>
+        <label class="tag-search"><span>タグ一覧</span><input id="tagSearch" type="search" placeholder="属性・効果・クラス名を検索" autocomplete="off"></label>
+        <div class="tag-filter-list" id="tagFilters" aria-label="タグ一覧"></div>
+        <p class="tag-filter-status" id="tagFilterStatus" role="status" aria-live="polite"></p>
+      </section>
+
       <fieldset class="database-filters hidden" id="cardFilters"><legend>カードを絞り込む</legend><label>レベル<select id="cardLevel"><option value="">すべてのレベル</option></select></label><label>ロール<select id="cardRole"><option value="">すべてのロール</option></select></label><label>チャンネル<select id="cardChannel"><option value="">すべてのチャンネル</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
       <fieldset class="database-filters medicine-filters hidden" id="medicineFilters"><legend>薬を絞り込む</legend><label>発動区分<select id="medicineTiming"><option value="">すべての区分</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
       <fieldset class="database-filters hidden" id="jobFilters"><legend>ジョブをクラスで絞り込む</legend><label>クラス<select id="jobClass"><option value="">すべてのクラス</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>

@@ -12,6 +12,7 @@
     "lint": "eslint . --max-warnings=0",
     "check": "npm run typecheck && npm run lint && npm run build",
     "regression": "node scripts/regression.mjs",
+    "regression:catalog": "node scripts/catalog-regression.mjs",
     "regression:browser": "node scripts/browser-regression.mjs",
     "audit:phases": "node scripts/phase-audit.mjs"
   },
