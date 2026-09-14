@@ -174,7 +174,7 @@ const baseEntries = [
 const allEntries = [...weaponEntries, ...cardEntries, ...medicineEntries, ...baseEntries, ...ccfoliaPanelEntries, ...starRailJobEntries, ...enemyEntries, ...starRailBossEntries];
 const uniqueEntries = allEntries.filter((entry, index, source) =>
   index === source.findIndex((candidate) => candidate.category === entry.category &&
-    (entry.category === 'enemies' ? candidate.id === entry.id : candidate.title === entry.title))
+    (entry.category === 'enemies' || entry.id.startsWith('ccfolia-screen-panel-') ? candidate.id === entry.id : candidate.title === entry.title))
 );
 
 export const defaultEntries = uniqueEntries.map((entry) => ({
