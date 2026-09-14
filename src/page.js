@@ -66,6 +66,7 @@ export function renderPage() {
         <button class="category" data-category="medicines" aria-pressed="false"><b>薬</b><small>図鑑</small></button>
         <button class="category" data-category="jobs" aria-pressed="false"><b>ジョブ</b><small>図鑑</small></button>
         <button class="category" data-category="emblems" aria-pressed="false"><b>紋章</b><small>図鑑</small></button>
+        <button class="category" data-category="rings" aria-pressed="false"><b>リンクリング</b><small>図鑑</small></button>
         <button class="category" data-category="enemies" aria-pressed="false"><b>敵＆攻略</b><small>情報</small></button>
         <button class="category" data-category="other" aria-pressed="false"><b>戦闘・報酬</b><small>ルール／世界</small></button>
       </nav>
@@ -77,6 +78,7 @@ export function renderPage() {
 
       <fieldset class="database-filters hidden" id="cardFilters"><legend>カードを絞り込む</legend><label>レベル<select id="cardLevel"><option value="">すべてのレベル</option></select></label><label>ロール<select id="cardRole"><option value="">すべてのロール</option></select></label><label>チャンネル<select id="cardChannel"><option value="">すべてのチャンネル</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
       <fieldset class="database-filters medicine-filters hidden" id="medicineFilters"><legend>薬を絞り込む</legend><label>発動区分<select id="medicineTiming"><option value="">すべての区分</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
+      <fieldset class="database-filters hidden" id="jobFilters"><legend>ジョブをクラスで絞り込む</legend><label>クラス<select id="jobClass"><option value="">すべてのクラス</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
       <fieldset class="enemy-filters hidden" id="enemyFilters"><legend>敵の記録を絞り込む</legend><label>分類<select id="enemyClass"><option value="">すべての分類</option></select></label><label>章<select id="enemyChapter"><option value="">すべての章</option></select></label><label>出現場所<select id="enemyLocation"><option value="">すべての場所</option></select></label><button type="button" class="secondary" data-action="reset-enemy-filters">絞り込みを解除</button></fieldset>
       <div class="result-meta"><p id="resultTitle">収録情報</p><span id="resultCount" role="status" aria-live="polite"></span></div>
       <div class="entry-grid" id="entryGrid"></div>
@@ -106,7 +108,7 @@ export function renderPage() {
       <input type="hidden" name="id">
       <input type="hidden" name="revision" value="0">
       <div class="form-grid">
-        <label><span>カテゴリー</span><select name="category" required><option value="weapons">武器種図鑑</option><option value="cards">カード図鑑</option><option value="medicines">薬図鑑</option><option value="jobs">ジョブ図鑑</option><option value="emblems">紋章図鑑</option><option value="enemies">敵図鑑＆攻略情報</option><option value="other">その他情報</option></select></label>
+        <label><span>カテゴリー</span><select name="category" required><option value="weapons">武器種図鑑</option><option value="cards">カード図鑑</option><option value="medicines">薬図鑑</option><option value="jobs">ジョブ図鑑</option><option value="emblems">紋章図鑑</option><option value="rings">リンクリング図鑑</option><option value="enemies">敵図鑑＆攻略情報</option><option value="other">その他情報</option></select></label>
         <label><span>識別色</span><select name="accent"><option value="lime">ライム</option><option value="amber">アンバー</option><option value="rose">ローズ</option><option value="violet">バイオレット</option><option value="ice">アイス</option><option value="sky">スカイ</option><option value="red">レッド</option><option value="teal">ティール</option></select></label>
       </div>
       <label><span>名前</span><input name="title" required maxlength="80" placeholder="例：炎獣グラヴァ"></label>
