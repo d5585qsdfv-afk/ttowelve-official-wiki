@@ -38,5 +38,7 @@ export function AuthStatus() {
   if (!session) return <Link className="header-link" href="/auth">ログイン</Link>;
 
   const label = session.user.user_metadata?.display_name || session.user.email || "アカウント";
-  return <span className="auth-status"><Link className="auth-name" title={label} href="/account">{label}</Link>{role === "admin" && <><Link className="header-link" href="/admin">管理</Link><Link className="header-link" href="/admin/wiki">Wiki編集</Link></>}<button className="header-button" type="button" onClick={() => { void signOut(); }}>ログアウト</button></span>;
+  const canPropose = role === "contributor" || role === "editor" || role === "admin";
+  const canEdit = role === "editor" || role === "admin";
+  return <span className="auth-status"><Link className="auth-name" title={label} href="/account">{label}</Link>{canPropose && <Link className="header-link" href="/contributor">提案</Link>}{role === "admin" && <Link className="header-link" href="/admin">管理</Link>}{canEdit && <Link className="header-link" href="/admin/wiki">Wiki編集</Link>}{canEdit && <Link className="header-link" href="/admin/assets">画像</Link>}<button className="header-button" type="button" onClick={() => { void signOut(); }}>ログアウト</button></span>;
 }
