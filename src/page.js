@@ -98,6 +98,7 @@ export function renderPage() {
   <dialog class="detail-dialog" id="detailDialog">
     <article class="detail-card">
       <button class="close" data-action="close-detail" aria-label="詳細を閉じる">×</button>
+      <button type="button" class="detail-favorite" id="detailFavorite" data-action="toggle-favorite-current" aria-pressed="false">☆ お気に入りに追加</button>
       <div class="detail-accent" id="detailAccent"></div>
       <img class="detail-image hidden" id="detailImage" alt="">
       <div class="detail-kind" id="detailKind"></div>

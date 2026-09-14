@@ -6,7 +6,9 @@ const prepareEntry=entry=>decorateEntry(normalizeWeaponEntry(normalizeEnemyEntry
 let entries=initial.map(prepareEntry),activeCategory='all',currentEntry=null;
 let selectedTags=new Set();
 const FAVORITE_TAGS_KEY='ttowelve.favorite-tags';
+const FAVORITE_ENTRIES_KEY='ttowelve.favorite-entries';
 let favoriteTags=readFavoriteTags();
+let favoriteEntryIds=readFavoriteEntryIds(),favoriteOnly=false;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const labels={all:'収録情報',weapons:'武器種図鑑',weaponItems:'武器図鑑',cards:'カード図鑑',medicines:'薬図鑑',jobs:'ジョブ図鑑',emblems:'紋章図鑑',rings:'リンクリング図鑑',enemies:'敵図鑑＆攻略情報',other:'戦闘・報酬'};
 const vundClasses=['Gamers','Collapse','Adventure','Sun','Mirror','Saver','Reverse','Mixing','StarRail','Genshin','Bright&Story','#Compass'];
@@ -18,16 +20,24 @@ const jobFilterFields=['#jobClass'];
 function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function readFavoriteTags(){try{const value=JSON.parse(localStorage.getItem(FAVORITE_TAGS_KEY)||'[]');return new Set(Array.isArray(value)?value.filter(tag=>typeof tag==='string'&&tag.trim()):[])}catch{return new Set()}}
 function saveFavoriteTags(){try{localStorage.setItem(FAVORITE_TAGS_KEY,JSON.stringify([...favoriteTags]))}catch{}}
+function readFavoriteEntryIds(){try{const value=JSON.parse(localStorage.getItem(FAVORITE_ENTRIES_KEY)||'[]');return new Set(Array.isArray(value)?value.filter(id=>typeof id==='string'&&id.trim()):[])}catch{return new Set()}}
+function saveFavoriteEntryIds(){try{localStorage.setItem(FAVORITE_ENTRIES_KEY,JSON.stringify([...favoriteEntryIds]))}catch{}}
 function toggleTag(tag){if(selectedTags.has(tag))selectedTags.delete(tag);else selectedTags.add(tag);render()}
 function toggleFavoriteTag(tag){if(favoriteTags.has(tag))favoriteTags.delete(tag);else favoriteTags.add(tag);saveFavoriteTags();renderTagBrowser()}
+function toggleFavoriteEntry(id){if(!id)return;if(favoriteEntryIds.has(id))favoriteEntryIds.delete(id);else favoriteEntryIds.add(id);saveFavoriteEntryIds();render();updateDetailFavorite()}
+function toggleFavoriteFilter(){favoriteOnly=!favoriteOnly;render()}
+function updateDetailFavorite(){const button=$('#detailFavorite');if(!button||!currentEntry)return;const active=favoriteEntryIds.has(currentEntry.id);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));button.textContent=active?'★ お気に入り登録済み':'☆ お気に入りに追加'}
 function tagCounts(){const counts=new Map(),scope=activeCategory==='all'?entries:entries.filter(entry=>entry.category===activeCategory);for(const entry of scope)for(const tag of entry.tags||[])counts.set(tag,(counts.get(tag)||0)+1);return counts}
 function renderTagBrowser(){
   const counts=tagCounts(),query=($('#tagSearch')?.value||'').trim().toLocaleLowerCase('ja-JP');
   const visible=[...counts.entries()].filter(([tag])=>!query||tag.toLocaleLowerCase('ja-JP').includes(query)).sort((a,b)=>(favoriteTags.has(b[0])-favoriteTags.has(a[0]))||(b[1]-a[1])||a[0].localeCompare(b[0],'ja'));
   const favorites=[...favoriteTags].filter(tag=>counts.has(tag)).sort((a,b)=>counts.get(b)-counts.get(a)||a.localeCompare(b,'ja'));
-  $('#favoriteTags').innerHTML=favorites.length?favorites.map(tag=>`<span class="tag-option favorite-option"><button type="button" class="tag-chip ${selectedTags.has(tag)?'selected':''}" data-action="toggle-tag" data-tag="${esc(tag)}" aria-pressed="${selectedTags.has(tag)}">${esc(tag)} <small>${counts.get(tag)}</small></button><button type="button" class="tag-star active" data-action="toggle-favorite-tag" data-tag="${esc(tag)}" aria-label="${esc(tag)}のお気に入りを外す">★</button></span>`).join(''):'<span class="tag-empty">まだありません。☆で追加できます。</span>';
+  const scope=activeCategory==='all'?entries:entries.filter(entry=>entry.category===activeCategory),favoriteCount=scope.filter(entry=>favoriteEntryIds.has(entry.id)).length;
+  const favoriteEntryOption=`<span class="tag-option favorite-entry-option"><button type="button" class="tag-chip favorite-entry-chip ${favoriteOnly?'selected':''}" data-action="toggle-favorite-filter" aria-pressed="${favoriteOnly}">★ お気に入り図鑑 <small>${favoriteCount}</small></button></span>`;
+  const favoriteTagOptions=favorites.map(tag=>`<span class="tag-option favorite-option"><button type="button" class="tag-chip ${selectedTags.has(tag)?'selected':''}" data-action="toggle-tag" data-tag="${esc(tag)}" aria-pressed="${selectedTags.has(tag)}">${esc(tag)} <small>${counts.get(tag)}</small></button><button type="button" class="tag-star active" data-action="toggle-favorite-tag" data-tag="${esc(tag)}" aria-label="${esc(tag)}のお気に入りを外す">★</button></span>`).join('');
+  $('#favoriteTags').innerHTML=favoriteEntryOption+favoriteTagOptions;
   $('#tagFilters').innerHTML=visible.length?visible.map(([tag,count])=>`<span class="tag-option"><button type="button" class="tag-chip ${selectedTags.has(tag)?'selected':''}" data-action="toggle-tag" data-tag="${esc(tag)}" aria-pressed="${selectedTags.has(tag)}">${esc(tag)} <small>${count}</small></button><button type="button" class="tag-star ${favoriteTags.has(tag)?'active':''}" data-action="toggle-favorite-tag" data-tag="${esc(tag)}" aria-label="${esc(tag)}をお気に入り${favoriteTags.has(tag)?'から外す':'に追加'}">${favoriteTags.has(tag)?'★':'☆'}</button></span>`).join(''):'<span class="tag-empty">一致するタグがありません。</span>';
-  const selected=[...selectedTags];$('#tagFilterStatus').textContent=selected.length?`選択中：${selected.join('、')}（AND検索）`:`タグを選ぶと、該当する記録だけを表示します。☆でお気に入りに追加できます。`;
+  const selected=[...selectedTags],status=[];if(favoriteOnly)status.push(`お気に入り図鑑 ${favoriteCount}件`);if(selected.length)status.push(`タグ：${selected.join('、')}（AND検索）`);$('#tagFilterStatus').textContent=status.length?`選択中：${status.join(' ／ ')}`:`タグを選ぶと、該当する記録だけを表示します。★で図鑑項目、☆でタグをお気に入りに追加できます。`;
 }
 function showArchive(){$('#modeSelect').classList.add('hidden');$('#archive').classList.remove('hidden');document.body.classList.add('archive-view');window.scrollTo({top:0});render()}
 function showHome(){$('#archive').classList.add('hidden');$('#modeSelect').classList.remove('hidden');document.body.classList.remove('archive-view');window.scrollTo({top:0})}
@@ -67,6 +77,7 @@ function filtered(){
   const q=$('#search').value.trim().toLowerCase();
   const list=entries.filter(e=>{
     if(activeCategory!=='all'&&e.category!==activeCategory)return false;
+    if(favoriteOnly&&!favoriteEntryIds.has(e.id))return false;
     if(q&&!searchEntry(e,q))return false;
     if(selectedTags.size&&!matchesTags(e,selectedTags))return false;
     if(activeCategory==='enemies'){
@@ -88,7 +99,8 @@ function render(){
     const card=e.category==='cards'?cardMetadata(e):null,medicine=e.category==='medicines'?medicineMetadata(e):null;
     const cardClass=[meta?'enemy-entry':weapon?'weapon-entry':medicine?'medicine-entry':'',e.image?'has-image':'',e.status&&e.status!=='実装済み'?'pending-entry':''].filter(Boolean).join(' ');
     const quickFacts=weapon?`<dl class="entry-stats weapon-stats"><div><dt>${weapon.individual?"武器種":"戦術タイプ"}</dt><dd>${esc(weapon.tacticalType)}</dd></div><div><dt>${weapon.individual?"属性":"系統"}</dt><dd>${esc(weapon.type)}</dd></div><div><dt>基礎</dt><dd>${esc(weapon.damage)}</dd></div><div><dt>属性倍率</dt><dd>${esc(weapon.multiplier)}</dd></div></dl><p class="entry-classification"><span>${weapon.individual?"資料区分":"戦闘特性"}</span>${esc(weapon.classification)}</p>`:meta?`<dl class="entry-stats enemy-stats"><div><dt>VUNDクラス</dt><dd>${esc(meta.vundClass||'—')}</dd></div><div><dt>HP</dt><dd>${esc(meta.hp)}</dd></div><div><dt>章</dt><dd>${esc(meta.chapter)}</dd></div><div class="wide"><dt>出現場所</dt><dd>${esc(meta.location)}</dd></div></dl><p class="affinity" aria-label="属性相性">${esc(meta.affinity)}</p><p class="enemy-action"><span>主な行動</span>${esc(meta.action)}</p>`:'';
-    return `<button class="entry ${cardClass}" data-id="${esc(e.id)}" aria-label="${esc(e.title)}の詳細を開く" style="--accent:${accents[e.accent]||accents.lime}">${e.image?`<span class="entry-media"><img src="${esc(e.image)}" alt="${esc(e.imageAlt||e.title)}" loading="lazy"></span>`:''}<span class="entry-overline"><span class="entry-kind">${esc(labels[e.category]||e.category)}</span>${meta?`<span class="enemy-class-badge">◇ ${esc(meta.vundClass||meta.classification)}</span>`:e.status&&e.status!=='実装済み'?`<span class="status-badge">${esc(e.status)}</span>`:weapon?`<span class="weapon-type-badge">${esc(weapon.tacticalType)}</span>`:job?`<span class="weapon-type-badge">${esc(job.characterClass)}</span>`:''}</span><h2>${esc(e.title)}</h2>${meta?`<span class="subtitle">${esc(meta.number)}${meta.vundClass?`｜${esc(meta.vundClass)}`:''}</span>`:!weapon?`<span class="subtitle">${esc(e.subtitle)}</span>`:''}${quickFacts}${job?`<span class="entry-facts">クラス｜${esc(job.characterClass)}${job.sourceClass&&job.characterClass==='クラス未確定'?`｜原典｜${esc(job.sourceClass)}`:''}</span>`:''}${card?`<span class="entry-facts">Lv.${card.levels.join(' · ')}｜${esc(card.role)}｜${esc(card.channel==='セット発動'?'セット':'CH '+normalizeDigits(card.channel))}</span>`:''}${medicine?`<span class="entry-facts">${esc(medicine.timing)}｜調合薬</span>`:''}<p class="summary">${esc(e.summary)}</p><footer><span class="tags">${(e.tags||[]).filter(tag=>!weapon||![weapon.tacticalType,weapon.type].includes(tag)).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</span><span class="entry-open">詳細 <span aria-hidden="true">↗</span></span></footer></button>`;
+    const favorite=favoriteEntryIds.has(e.id);
+    return `<article class="entry ${cardClass}" style="--accent:${accents[e.accent]||accents.lime}"><button type="button" class="entry-hit" data-id="${esc(e.id)}" aria-label="${esc(e.title)}の詳細を開く">${e.image?`<span class="entry-media"><img src="${esc(e.image)}" alt="${esc(e.imageAlt||e.title)}" loading="lazy"></span>`:''}<span class="entry-overline"><span class="entry-kind">${esc(labels[e.category]||e.category)}</span>${meta?`<span class="enemy-class-badge">◇ ${esc(meta.vundClass||meta.classification)}</span>`:e.status&&e.status!=='実装済み'?`<span class="status-badge">${esc(e.status)}</span>`:weapon?`<span class="weapon-type-badge">${esc(weapon.tacticalType)}</span>`:job?`<span class="weapon-type-badge">${esc(job.characterClass)}</span>`:''}</span><h2>${esc(e.title)}</h2>${meta?`<span class="subtitle">${esc(meta.number)}${meta.vundClass?`｜${esc(meta.vundClass)}`:''}</span>`:!weapon?`<span class="subtitle">${esc(e.subtitle)}</span>`:''}${quickFacts}${job?`<span class="entry-facts">クラス｜${esc(job.characterClass)}${job.sourceClass&&job.characterClass==='クラス未確定'?`｜原典｜${esc(job.sourceClass)}`:''}</span>`:''}${card?`<span class="entry-facts">Lv.${card.levels.join(' · ')}｜${esc(card.role)}｜${esc(card.channel==='セット発動'?'セット':'CH '+normalizeDigits(card.channel))}</span>`:''}${medicine?`<span class="entry-facts">${esc(medicine.timing)}｜調合薬</span>`:''}<p class="summary">${esc(e.summary)}</p><footer><span class="tags">${(e.tags||[]).filter(tag=>!weapon||![weapon.tacticalType,weapon.type].includes(tag)).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</span><span class="entry-open">詳細 <span aria-hidden="true">↗</span></span></footer></button><button type="button" class="entry-favorite ${favorite?'active':''}" data-action="toggle-favorite-entry" data-entry-id="${esc(e.id)}" aria-pressed="${favorite}" aria-label="${esc(e.title)}をお気に入り${favorite?'から外す':'に追加'}">${favorite?'★':'☆'}</button></article>`;
   }).join('');
   $$('#entryGrid img').forEach(image=>{image.addEventListener('error',()=>markImageFailure(image));if(image.complete&&!image.naturalWidth)markImageFailure(image)});
 }
@@ -97,6 +109,7 @@ function openDetail(id){
   $('#detailAccent').style.background=accents[currentEntry.accent]||accents.lime;$('#detailKind').textContent=labels[currentEntry.category];$('#detailTitle').textContent=currentEntry.title;$('#detailSubtitle').textContent=currentEntry.subtitle||'';$('#detailSummary').textContent=currentEntry.summary||'';$('#detailBody').textContent=currentEntry.body||'';$('#detailSource').textContent=(currentEntry.source||'クラウド編集')+'｜改訂 '+(currentEntry.revision||0);$('#detailTags').innerHTML=(currentEntry.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');const detailImage=$('#detailImage');detailImage.classList.remove('image-failed');detailImage.parentElement?.classList.remove('image-unavailable');detailImage.classList.toggle('hidden',!currentEntry.image);detailImage.src=currentEntry.image||'';detailImage.alt=currentEntry.imageAlt||currentEntry.title;
   const isEnemy=currentEntry.category==='enemies';$('#detailEnemyFacts').classList.toggle('hidden',!isEnemy);
   if(isEnemy){const meta=enemyMetadata(currentEntry);$('#detailEnemyFacts').innerHTML=[['VUNDクラス',meta.vundClass||'—'],['分類',meta.classification],['章',meta.chapter],['出現場所',meta.location]].map(([label,value])=>`<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}
+  updateDetailFavorite();
   $('#detailDialog').showModal();
 }
 function toggleEnemyEditor(){const enemy=$('#editorForm').elements.category.value==='enemies';$('#enemyEditor').classList.toggle('hidden',!enemy);$('#enemyEditor').disabled=!enemy}
@@ -122,7 +135,10 @@ document.addEventListener('click',event=>{
   else if(action==='edit-current'){$('#detailDialog').close();openEditor(currentEntry)}
   else if(action==='toggle-tag')toggleTag(b.dataset.tag||'')
   else if(action==='toggle-favorite-tag')toggleFavoriteTag(b.dataset.tag||'')
-  else if(action==='clear-tags'){selectedTags.clear();render()}
+  else if(action==='toggle-favorite-entry')toggleFavoriteEntry(b.dataset.entryId||'')
+  else if(action==='toggle-favorite-current')toggleFavoriteEntry(currentEntry?.id||'')
+  else if(action==='toggle-favorite-filter')toggleFavoriteFilter()
+  else if(action==='clear-tags'){selectedTags.clear();favoriteOnly=false;render()}
   else if(action==='reset-enemy-filters'){filterFields.forEach(([selector])=>$(selector).value='');$('#search').value='';selectedTags.clear();render()}
   else if(action==='reset-database-filters'){[...cardFilterFields,...medicineFilterFields,...jobFilterFields].forEach(selector=>$(selector).value='');$('#search').value='';selectedTags.clear();render()}
   else if(action==='paste-ccfolia')navigator.clipboard.readText().then(text=>{const area=$('#editorForm').elements.body;area.value+=(area.value?'\n':'')+text;$('#formMessage').textContent='クリップボードの文章を追加しました。'}).catch(()=>$('#formMessage').textContent='詳細欄へ直接貼り付けてください。');
