@@ -3,7 +3,11 @@ import { theme } from './theme.js';
 
 const initialData = JSON.stringify(defaultEntries).replaceAll('<', '\\u003c');
 
-export function renderPage() {
+export function renderPage(config = {}) {
+  const supabaseConfig = JSON.stringify({
+    url: typeof config.supabaseUrl === 'string' ? config.supabaseUrl : '',
+    anonKey: typeof config.supabaseAnonKey === 'string' ? config.supabaseAnonKey : '',
+  }).replaceAll('<', '\\u003c');
   return `<!doctype html>
 <html lang="ja">
 <head>
@@ -25,6 +29,7 @@ export function renderPage() {
     </button>
     <div class="top-actions">
       <span class="sync" id="syncState"><i></i>同期を確認中</span>
+      <button class="icon-button account-button" data-action="open-account" aria-label="ログインと編集提案">♙ <span id="accountButtonLabel">ログイン</span></button>
       <button class="icon-button" data-action="open-editor" aria-label="管理・編集">✦ <span>編集</span></button>
     </div>
   </header>
@@ -140,7 +145,36 @@ export function renderPage() {
     </form>
   </dialog>
 
+  <dialog class="account-dialog" id="accountDialog">
+    <article class="account-card">
+      <button class="close" data-action="close-account" aria-label="アカウント画面を閉じる">×</button>
+      <div class="eyebrow">SUPABASE ACCOUNT</div>
+      <h2 id="accountHeading">ログインと編集提案</h2>
+      <p class="account-lead" id="accountStatus" role="status" aria-live="polite">ログインすると、編集提案を送れます。</p>
+      <section id="authPanel">
+        <form id="authForm">
+          <label><span>メールアドレス</span><input id="authEmail" type="email" autocomplete="email" required></label>
+          <label><span>パスワード</span><input id="authPassword" type="password" autocomplete="current-password" minlength="8" required></label>
+          <label id="authNameField" class="hidden"><span>表示名（新規登録時）</span><input id="authName" autocomplete="nickname" maxlength="80"></label>
+          <p class="form-message" id="authMessage" role="status"></p>
+          <div class="account-actions"><button class="primary" id="authSubmit" type="submit">ログイン</button><button class="secondary" data-action="toggle-auth-mode" type="button">新規登録に切り替え</button></div>
+        </form>
+      </section>
+      <section id="proposalPanel" class="hidden">
+        <form id="proposalForm">
+          <label><span>対象の図鑑</span><select id="proposalEntry" required></select></label>
+          <label><span>提案タイトル</span><input id="proposalTitle" maxlength="200" required placeholder="例：分類名の修正案"></label>
+          <label><span>概要</span><textarea id="proposalSummary" rows="2" maxlength="1000" placeholder="変更したい点を短く入力"></textarea></label>
+          <label><span>変更案本文</span><textarea id="proposalContent" rows="8" maxlength="6000" required placeholder="正しい本文や修正案を入力"></textarea></label>
+          <p class="form-message" id="proposalMessage" role="status"></p>
+          <div class="account-actions"><button class="primary" id="proposalSubmit" type="submit">編集提案を送信</button><button class="secondary" data-action="sign-out" type="button">ログアウト</button></div>
+        </form>
+      </section>
+    </article>
+  </dialog>
+
   <script>window.__INITIAL_ENTRIES__=${initialData};</script>
+  <script>window.__SUPABASE_CONFIG__=${supabaseConfig};</script>
   <script type="module" src="/app.js"></script>
 </body></html>`;
 }

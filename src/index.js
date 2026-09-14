@@ -102,7 +102,7 @@ async function handle(request, env) {
   }
   if (url.pathname === '/api/entries' && request.method === 'POST') return saveEntry(request, env);
   if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
-  return new Response(request.method === 'HEAD' ? null : renderPage(), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', 'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin' } });
+  return new Response(request.method === 'HEAD' ? null : renderPage({ supabaseUrl: env.SUPABASE_URL, supabaseAnonKey: env.SUPABASE_ANON_KEY }), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', 'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin' } });
 }
 
 export default { fetch: handle };
