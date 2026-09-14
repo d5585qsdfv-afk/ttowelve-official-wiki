@@ -6,6 +6,7 @@ export function enemyMetadata(entry) {
     classification: field('分類') || '未分類',
     chapter: field('章') || '未設定',
     location: field('出現場所').replace(/^[（(]|[）)]$/g, '') || '未設定',
+    vundClass: entry.vundClass || '',
   };
 }
 

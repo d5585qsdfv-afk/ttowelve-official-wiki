@@ -4,6 +4,7 @@ import { medicineEntries } from './medicines.generated.js';
 import { enemyEntries } from './enemies.generated.js';
 import { starRailJobEntries, starRailBossEntries } from './starrail.generated.js';
 import { ccfoliaPanelEntries } from './ccfolia.panels.generated.js';
+import { canonicalJobClass, vundClassForEntry } from './vund-classes.js';
 
 export const GAME_ID = 'ten-saviors';
 
@@ -179,6 +180,8 @@ const uniqueEntries = allEntries.filter((entry, index, source) =>
 
 export const defaultEntries = uniqueEntries.map((entry) => ({
   ...entry,
+  ...(entry.category === 'jobs' ? { characterClass: canonicalJobClass(entry) || undefined } : {}),
+  ...(vundClassForEntry(entry) ? { vundClass: vundClassForEntry(entry) } : {}),
   game: GAME_ID,
   revision: 0,
   source: entry.source || '初期収録'
