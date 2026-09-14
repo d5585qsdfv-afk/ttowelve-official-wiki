@@ -2,11 +2,12 @@
 
 ## 現在の公開サイト（TTowelve Cinema）
 
-SitesとCloudflare Pagesで公開しているのは `src/index.js` を入口にしたWorker版です。`src/page.js`、`src/theme.js`、`src/client.browser.js` が画面を構成し、既存のデータ表示を維持しています。Pagesの `functions/[[path]].js` は同じWorkerを呼び出すため、公開URLでもAuth・管理者編集・SupabaseへのRevision保存を利用できます。
+Cloudflare Pagesの公開URLは、映画館風のWorkerアーカイブを入口にしつつ、リポジトリ内で作成済みのNext.jsポータル（Auth、アカウント、Wiki、Contributor、管理、画像管理）も同じドメインで利用できる統合構成です。`/`、`/api/entries`、Workerの画像・JavaScriptは `src/index.js` が担当し、それ以外のNext.js静的ルートはPagesの静的配信へ引き渡します。これにより既存のWorker版データ表示を維持したまま、チャットで作成した管理・ユーザー機能へ遷移できます。
 
 - `npm run build:site`: 公開用の `dist/server/` と画像を生成します。
 - `npm run dev:site`: 上記で生成した公開用画面をローカルで開きます。再編集後は再生成し、サーバーを再起動してください。
 - `npm run test:images`: ユーザーが画像テストを依頼した場合のみ実行します。事前に `build:site` が必要です。
+- 公開画面の上部から `Wikiポータル`、`アカウント`、`高度なWiki管理`、`画像管理`へ移動できます。Contributorの提案管理は `/contributor` から利用します。
 
 画像の正本は `public/assets/` です。公開環境では `dist/out/` をコピーするだけでは画像URLが配信されないため、ビルド時に画像をWorkerへ同梱します。存在しない画像には404を返します。
 
