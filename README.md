@@ -2,7 +2,7 @@
 
 ## 現在の公開サイト（TTowelve Cinema）
 
-Sitesで公開しているのは `src/index.js` を入口にしたWorker版です。`src/page.js`、`src/theme.js`、`src/client.browser.js` が画面を構成し、既存のクラウド編集を維持しています。
+SitesとCloudflare Pagesで公開しているのは `src/index.js` を入口にしたWorker版です。`src/page.js`、`src/theme.js`、`src/client.browser.js` が画面を構成し、既存のデータ表示を維持しています。Pagesの `functions/[[path]].js` は同じWorkerを呼び出すため、公開URLでもAuth・管理者編集・SupabaseへのRevision保存を利用できます。
 
 - `npm run build:site`: 公開用の `dist/server/` と画像を生成します。
 - `npm run dev:site`: 上記で生成した公開用画面をローカルで開きます。再編集後は再生成し、サーバーを再起動してください。
@@ -36,7 +36,9 @@ Supabase を PostgreSQL、Auth、Storage、Realtime、Edge Functions の基盤�
 - 環境変数名: [`.env.example`](.env.example)
 - 構造テスト: `npm run test:backend`
 
-Cloudflare Pages で Next.js 版を公開する場合は build command を `npm run build`、output directory を `out` にします。Pages/GitHub には `NEXT_PUBLIC_SUPABASE_URL` と publishable anon key のみを設定し、service role key は Supabase Edge Functions の secrets に限定してください。現在の Worker 版 (`src/index.js`) の公開導線は別に残しています。
+Cloudflare Pagesの現在のGitHub連携設定は、production branchを `main`、build commandを `npm run build`、output directoryを `out` とします。Pages FunctionsはGitHubへ含めた `functions/[[path]].js` からWorker版を提供します。PagesのProduction環境には `NEXT_PUBLIC_SUPABASE_URL` と `NEXT_PUBLIC_SUPABASE_ANON_KEY`（または同値の `SUPABASE_URL` / `SUPABASE_ANON_KEY`）だけを設定してください。anon/publishable keyはRLSで保護する公開キーですが、`SUPABASE_SERVICE_ROLE_KEY`や外部API secretはPagesへ設定しません。
+
+Worker版の管理者保存は、PagesリクエストのSupabase Bearer tokenをSupabase Authで検証し、`current_role()`で `editor` / `admin` のみ許可します。保存先はSupabaseの `wiki_pages` で、既存の `update_wiki_page()` によりversion競合を409として拒否し、既存のRevision・Audit Logトリガーを通します。D1 BindingがあるSites環境は従来どおりD1を優先し、Pages環境ではSupabaseへ接続します。
 
 Node.js のビルド版本は `.nvmrc` で 22 に固定しています。`public/_headers` は Pages 配信時の基本セキュリティヘッダーと Next.js 静的アセットの長期キャッシュを定義します。CSP はSupabase Authの実ドメインとPages本番ドメインを確認してから追加します。
 
