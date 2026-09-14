@@ -32,27 +32,32 @@ async function setInput(selector,value) { return evaluate(`(()=>{const el=docume
 async function navigate(url) { await send("Page.navigate",{url}); await wait(550); }
 
 try {
-  await send("Runtime.enable"); await send("Page.enable"); await waitFor(`document.querySelectorAll('[role="tab"]').length===4`); await wait(1000);
-  await evaluate(`(()=>{const tab=Array.from(document.querySelectorAll('[role="tab"]')).find((el)=>el.textContent==="カード");tab.click();return true})()`); await wait(300);
-  let state=await evaluate(`({selected:Array.from(document.querySelectorAll('[role="tab"]')).find((el)=>el.getAttribute("aria-selected")==="true")?.textContent,count:document.querySelector('.result-count')?.textContent})`);
-  if(state.selected!=="カード"||!state.count.includes("5件")) throw new Error(`Tab failed: ${JSON.stringify(state)}`);
-  await setInput('.catalog-tools input[type="search"]',"星"); await wait(150);
-  state=await evaluate(`({count:document.querySelector('.result-count')?.textContent,cards:document.querySelectorAll('.entity-card').length})`);
+  await send("Runtime.enable"); await send("Page.enable");
+  await waitFor(`document.querySelector('[data-game="ten-saviors"]')`);
+  await waitFor(`document.querySelector('#countAll')?.textContent === "807"`);
+  await evaluate(`(()=>{document.querySelector('[data-game="ten-saviors"]').click();return true})()`);
+  await waitFor(`document.querySelector('[data-category="cards"]') && document.querySelector('#resultCount')?.textContent`);
+  await evaluate(`(()=>{document.querySelector('[data-category="cards"]').click();return true})()`); await wait(300);
+  let state=await evaluate(`({selected:document.querySelector('[data-category="cards"]')?.getAttribute("aria-pressed"),count:document.querySelector('#resultCount')?.textContent})`);
+  if(state.selected!=="true"||state.count!=="35件") throw new Error(`Category failed: ${JSON.stringify(state)}`);
+  await setInput('#search',"ムクイルカ"); await wait(150);
+  state=await evaluate(`({count:document.querySelector('#resultCount')?.textContent,cards:document.querySelectorAll('#entryGrid .entry').length})`);
   if(state.cards!==1) throw new Error(`Local search failed: ${JSON.stringify(state)}`);
-  await setInput('.catalog-tools input[type="search"]',"一致しない語"); await wait(150);
-  if(!(await evaluate(`document.body.textContent.includes("該当する情報がありません")`))) throw new Error("Empty state failed");
-  await setInput('.catalog-tools input[type="search"]',""); await evaluate(`(()=>{const el=document.querySelector('[aria-label="レアリティで絞り込み"]');el.value="Legendary";el.dispatchEvent(new Event("change",{bubbles:true}));return true})()`); await wait(150);
-  if((await evaluate(`document.querySelectorAll('.entity-card').length`))!==1) throw new Error("Rarity filter failed");
-  await setInput('.global-search input[type="search"]',"白環"); await wait(150);
-  if(!(await evaluate(`document.querySelector('#global-search-results')?.textContent.includes("白環竜ネヴァ")`))) throw new Error("Global search failed");
+  await setInput('#search',"一致しない語"); await wait(150);
+  if(!(await evaluate(`document.querySelector("#empty")?.classList.contains("hidden")===false`))) throw new Error("Empty state failed");
+  await setInput('#search',""); await evaluate(`(()=>{const el=document.querySelector('#cardRole');el.value="Attack";el.dispatchEvent(new Event("change",{bubbles:true}));return true})()`); await wait(150);
+  state=await evaluate(`({count:document.querySelector('#resultCount')?.textContent,cards:document.querySelectorAll('#entryGrid .entry').length})`);
+  if(state.cards!==13||state.count!=="13件") throw new Error(`Card role filter failed: ${JSON.stringify(state)}`);
+  await evaluate(`(()=>{document.querySelector('#cardRole').value="";document.querySelector('#cardRole').dispatchEvent(new Event("change",{bubbles:true}));document.querySelector('#entryGrid .entry-hit').click();return true})()`); await wait(150);
+  if(!(await evaluate(`document.querySelector('#detailDialog')?.open&&document.querySelector('#detailTitle')?.textContent.includes("ムクイルカ")`))) throw new Error("Detail dialog failed");
   await send("Emulation.setDeviceMetricsOverride",{width:390,height:844,deviceScaleFactor:1,mobile:false});
   await navigate("http://127.0.0.1:4173/games/idlet/");
   if(!(await evaluate(`document.body.textContent.includes("COMING SOON")`))) throw new Error("Coming Soon failed");
   const viewport=await evaluate(`({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth})`);
   if(viewport.scroll>viewport.client) throw new Error(`Horizontal overflow: ${JSON.stringify(viewport)}`);
-  const notFound=await fetch("http://127.0.0.1:4173/games/juno/jobs/invalid-slug/");
-  if(notFound.status!==404) throw new Error(`Invalid slug returned ${notFound.status}`);
-  console.log("Browser regression passed: tabs, local search, empty state, rarity filter, global search, Coming Soon, invalid-slug 404.");
+  const missingAsset=await fetch("http://127.0.0.1:4173/assets/does-not-exist.webp");
+  if(missingAsset.status!==404) throw new Error(`Missing asset returned ${missingAsset.status}`);
+  console.log("Browser regression passed: lobby navigation, category selection, local search, empty state, role filter, detail dialog, mobile layout, Coming Soon, and missing-asset 404.");
 } finally {
   socket.close(); chrome.kill();
 }

@@ -27,3 +27,19 @@ Next.js App Router・TypeScript・Tailwind CSSで構築した、複数ゲーム�
 - `npm run regression`: 生成ページ・内部リンク・主要表示の構造確認
 
 データは `src/data/`、型は `src/types/wiki.ts`、検索ロジックは `src/lib/search.ts` に分離しています。将来DBやCMSへ移行するときは `src/data/index.ts` の取得境界をRepository/API実装へ差し替える想定です。
+
+## Supabase / Cloudflare Pages バックエンド
+
+Supabase を PostgreSQL、Auth、Storage、Realtime、Edge Functions の基盤として使う再構築可能なバックエンドを `supabase/` に追加しています。DB変更は `supabase/migrations/`、開発用データは `supabase/seed.sql`、RLS の実 DB テストは `supabase/tests/rls.sql` で管理します。ブラウザ向け Auth/API の入口は `src/lib/supabase/` です。
+
+- 設計・権限・競合制御・Storage・Cloudflare Pages 手順: [`docs/SUPABASE_BACKEND.md`](docs/SUPABASE_BACKEND.md)
+- 環境変数名: [`.env.example`](.env.example)
+- 構造テスト: `npm run test:backend`
+
+Cloudflare Pages で Next.js 版を公開する場合は build command を `npm run build`、output directory を `out` にします。Pages/GitHub には `NEXT_PUBLIC_SUPABASE_URL` と publishable anon key のみを設定し、service role key は Supabase Edge Functions の secrets に限定してください。現在の Worker 版 (`src/index.js`) の公開導線は別に残しています。
+
+Node.js のビルド版本は `.nvmrc` で 22 に固定しています。`public/_headers` は Pages 配信時の基本セキュリティヘッダーと Next.js 静的アセットの長期キャッシュを定義します。CSP はSupabase Authの実ドメインとPages本番ドメインを確認してから追加します。
+
+ログイン後は `/account` で管理者が設定した本人用プロフィールとクラウドセーブを確認できます。公開Wiki詳細 (`/wiki?game=<game>&slug=<slug>`) では、ログインユーザーのお気に入り、閲覧履歴、コメント投稿・編集・削除・通報を利用できます。初回adminのone-time設定は [`supabase/operations/bootstrap-admin.sql`](supabase/operations/bootstrap-admin.sql) を対象UUIDへ置き換えて実行してください。
+
+Google Cloud Consoleを使わず、追加費用も避ける場合は、`NEXT_PUBLIC_ENABLE_GOOGLE_OAUTH=false`、`NEXT_PUBLIC_ENABLE_MAGIC_LINK=false`、`NEXT_PUBLIC_ENABLE_EMAIL_RECOVERY=false`にしてEmail + Passwordを使用します。この無料モードではメール確認とパスワードリセットを使いません。Magic Link/OTPとパスワードリセットを使う場合はメール送信が必要です。小規模な個人用運用なら無料のGmail SMTPをSupabaseへ設定する選択肢もありますが、送信上限・迷惑メール判定・アカウント停止リスクがあるため、大量送信には使いません。

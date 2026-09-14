@@ -38,6 +38,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "legacy"
+    "legacy",
+    "supabase/functions"
   ]
 }

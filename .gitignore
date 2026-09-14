@@ -5,3 +5,8 @@ dist/
 .sites-runtime/
 *.tsbuildinfo
 *.tar
+*.tar.gz
+
+# Local agent/workspace instructions and handoff artifacts.
+AGENTS.md
+harness/

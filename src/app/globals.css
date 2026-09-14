@@ -48,6 +48,77 @@ button,a,input,select { outline-offset:3px; }
 .brand-glyph span { transform:rotate(-45deg); }
 .brand-copy { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .header-link { color:var(--muted); font-size:.85rem; padding:.45rem; }
+.header-actions { display:flex; align-items:center; gap:.25rem; justify-content:end; min-width:0; }
+.header-button { border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:.78rem; padding:.45rem; }
+.auth-status { display:flex; align-items:center; gap:.35rem; min-width:0; }
+.auth-name { max-width:10rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--secondary); font-size:.76rem; }
+.auth-page { min-height:80vh; display:grid; place-items:center; padding:3rem 1rem; }
+.auth-card { width:min(100%,30rem); max-width:30rem; border:1px solid var(--line); background:linear-gradient(145deg,var(--surface-raised),var(--surface)); padding:clamp(1.25rem,4vw,2.5rem); box-shadow:0 1.5rem 4rem #0006; }
+.auth-card h1 { font:700 clamp(1.8rem,5vw,2.8rem) Georgia,"Yu Mincho",serif; margin:.25rem 0 .6rem; }
+.auth-lead { color:var(--muted); font-size:.86rem; margin:0 0 1.35rem; }
+.auth-card label { display:block; margin:.85rem 0; }
+.auth-card label span { display:block; color:var(--secondary); font-size:.75rem; margin-bottom:.35rem; }
+.auth-card input { width:100%; background:#0b141b; border:1px solid var(--line); color:var(--text); padding:.7rem; }
+.oauth-button,.auth-submit { width:100%; min-height:2.8rem; cursor:pointer; }
+.oauth-button { border:1px solid var(--primary); background:transparent; color:var(--text); }
+.oauth-button:hover { background:var(--surface-raised); }
+.auth-magic-link { margin-top:.65rem; color:var(--accent); border-color:var(--line); }
+.oauth-button:disabled,.auth-submit:disabled { opacity:.6; cursor:wait; }
+.auth-divider { display:flex; align-items:center; gap:.7rem; color:var(--muted); font-size:.72rem; margin:1.2rem 0; }
+.auth-divider::before,.auth-divider::after { content:""; height:1px; background:var(--line); flex:1; }
+.auth-secondary,.auth-back { color:var(--muted); font-size:.78rem; text-align:center; }
+.auth-secondary a,.auth-back a { color:var(--primary); text-decoration:underline; }
+.auth-mode { display:block; margin:1rem auto 0; border:0; background:transparent; color:var(--accent); cursor:pointer; font-size:.78rem; text-decoration:underline; }
+.admin-page { width:min(1180px,calc(100% - 2rem)); margin:auto; padding:clamp(1.5rem,4vw,3rem) 0 5rem; }
+.admin-layout { display:grid; grid-template-columns:minmax(16rem,.8fr) minmax(0,1.4fr); gap:1rem; }
+.admin-layout .section-title { margin-top:0; }
+.admin-account-list { display:grid; gap:.4rem; max-height:50rem; overflow:auto; }
+.admin-account { display:grid; grid-template-columns:1fr auto; gap:0 .8rem; text-align:left; border:1px solid var(--line); background:transparent; color:var(--text); padding:.75rem; cursor:pointer; }
+.admin-account:hover,.admin-account[data-selected="true"] { border-color:var(--primary); background:var(--surface-raised); }
+.admin-account span,.admin-account small { color:var(--muted); font-size:.72rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.admin-account small { grid-column:2; grid-row:1 / span 2; align-self:center; color:var(--accent); }
+.admin-layout label { display:block; margin:.9rem 0; }
+.admin-layout label>span { display:block; color:var(--secondary); font-size:.75rem; margin-bottom:.35rem; }
+.admin-layout input,.admin-layout textarea,.admin-layout select { width:100%; border:1px solid var(--line); background:#0b141b; color:var(--text); padding:.65rem; }
+.wiki-json-editor { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.78rem; }
+.admin-link { display:inline-flex; align-items:center; white-space:nowrap; }
+.admin-account-id { color:var(--muted); font-size:.8rem; overflow-wrap:anywhere; }
+.admin-account-id small { font-size:.68rem; }
+.admin-action { margin-top:.35rem; cursor:pointer; }
+.admin-action:disabled { opacity:.6; cursor:wait; }
+.admin-rule { border:0; border-top:1px solid var(--line); margin:1.5rem 0; }
+.admin-layout h3 { color:var(--primary); font-size:1rem; }
+.account-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:1rem; }
+.account-title { color:var(--primary); font:700 1.45rem Georgia,"Yu Mincho",serif; margin:.2rem 0 .7rem; }
+.account-grid label { display:block; margin:.9rem 0; }
+.account-grid label>span { display:block; color:var(--secondary); font-size:.75rem; margin-bottom:.35rem; }
+.account-grid input,.account-grid textarea,.account-grid select { width:100%; border:1px solid var(--line); background:#0b141b; color:var(--text); padding:.65rem; }
+.wiki-engagement { display:flex; align-items:center; flex-wrap:wrap; gap:.6rem; border-bottom:1px solid var(--line); padding:.8rem 0; }
+.wiki-engagement .header-button { border:1px solid var(--line); background:var(--surface); }
+.wiki-engagement .header-button[aria-pressed="true"] { color:var(--primary); border-color:var(--primary); }
+.wiki-engagement .header-button:disabled { opacity:.7; cursor:not-allowed; }
+.wiki-engagement small { color:var(--muted); }
+.realtime-notice { color:var(--danger); font-size:.78rem; font-weight:700; }
+.comments-panel { margin-top:2rem; border-top:1px solid var(--line); padding-top:.5rem; }
+.comments-heading { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; }
+.comments-heading small { color:var(--muted); }
+.comment-list { display:grid; gap:.7rem; }
+.comment-card { border:1px solid var(--line); background:var(--surface); padding:.9rem; }
+.comment-card p { white-space:pre-wrap; overflow-wrap:anywhere; margin:.55rem 0; }
+.comment-card textarea,.comment-form textarea { width:100%; border:1px solid var(--line); background:#0b141b; color:var(--text); padding:.65rem; resize:vertical; }
+.comment-meta { display:flex; justify-content:space-between; gap:1rem; color:var(--muted); font-size:.75rem; }
+.comment-meta strong { color:var(--secondary); }
+.comment-actions { display:flex; align-items:center; gap:.35rem; justify-content:flex-end; }
+.comment-form { border-top:1px solid var(--line); margin-top:1rem; padding-top:1rem; }
+.comment-form label { display:block; }
+.comment-form label span { display:block; color:var(--secondary); font-size:.75rem; margin-bottom:.35rem; }
+.comment-form .primary { margin-top:.6rem; cursor:pointer; }
+.admin-audit-panel { margin-top:1rem; }
+.audit-list { display:grid; }
+.audit-row { display:grid; grid-template-columns:minmax(9rem,1fr) minmax(8rem,1.2fr) auto; gap:.7rem; align-items:baseline; border-top:1px solid var(--line); padding:.65rem 0; font-size:.78rem; }
+.audit-row span,.audit-row time { color:var(--muted); overflow-wrap:anywhere; }
+.checkbox-label { display:flex!important; align-items:center; gap:.55rem; color:var(--secondary); font-size:.8rem; }
+.checkbox-label input { width:auto; }
 .wiki-grid { display:grid; grid-template-columns:var(--sidebar) minmax(0,1fr); min-height:calc(100vh - 4.25rem); }
 .wiki-sidebar { position:sticky; top:4.25rem; height:calc(100vh - 4.25rem); border-right:1px solid var(--line); background:rgba(13,22,29,.9); padding:1.2rem .8rem; overflow:auto; }
 .wiki-sidebar nav { display:grid; gap:.25rem; }
@@ -77,6 +148,24 @@ button,a,input,select { outline-offset:3px; }
 .category-card p { color:var(--muted); font-size:.86rem; margin:0; }
 .category-count { margin-top:auto; font-size:.75rem; color:var(--accent); }
 .section-title { font:700 1.35rem Georgia,"Yu Mincho",serif; margin:2.3rem 0 1rem; }
+.live-wiki-section { border:1px solid var(--primary); background:linear-gradient(135deg,var(--surface-raised),var(--surface)); padding:1rem; margin:0 0 1.5rem; }
+.live-wiki-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.live-wiki-heading .section-title { margin:.1rem 0 .8rem; }
+.live-wiki-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; }
+.live-wiki-card { border:1px solid var(--line); padding:.8rem; background:rgba(0,0,0,.12); }
+.live-wiki-card h3 { margin:0 0 .25rem; font-size:1rem; }
+.live-wiki-card h3 a { color:var(--text); text-decoration:underline; text-decoration-color:var(--primary); text-underline-offset:.2em; }
+.live-wiki-card p,.live-wiki-card small { color:var(--muted); font-size:.78rem; }
+.live-wiki-card p { margin:.2rem 0 .7rem; }
+.live-wiki-section-preview { border-top:1px solid var(--line); padding:.45rem 0; font-size:.75rem; }
+.live-wiki-section-preview strong,.live-wiki-section-preview span { display:block; }
+.live-wiki-section-preview strong { color:var(--primary); }
+.live-wiki-section-preview span { color:var(--secondary); white-space:pre-line; }
+.live-wiki-detail { width:min(900px,calc(100% - 2rem)); margin:auto; padding:clamp(2rem,6vw,5rem) 0; }
+.live-wiki-detail h1 { font:700 clamp(2rem,6vw,4.5rem) Georgia,"Yu Mincho",serif; line-height:1.1; margin:.3rem 0 1rem; }
+.live-wiki-detail-summary { color:var(--muted); font-size:1.05rem; border-bottom:1px solid var(--line); padding-bottom:1.3rem; }
+.live-wiki-detail-sections { margin:1.2rem 0 1.5rem; }
+.live-wiki-detail-updated { color:var(--muted); font-size:.75rem; margin:1.5rem 0; }
 .activity-grid,.version-grid { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; }
 .info-panel { border:1px solid var(--line); background:var(--surface); padding:1rem; }
 .activity-list { list-style:none; padding:0; margin:.4rem 0 0; }
@@ -143,8 +232,13 @@ button,a,input,select { outline-offset:3px; }
   .mobile-nav a { min-width:4.4rem; flex:1; text-align:center; padding:.45rem .3rem; color:var(--muted); font-size:.68rem; }
   .mobile-nav a span { display:block; color:var(--primary); font-size:1rem; }
   .category-grid,.entity-grid,.activity-grid,.version-grid { grid-template-columns:1fr; }
+  .live-wiki-grid { grid-template-columns:1fr; }
   .catalog-tools { position:static; grid-template-columns:1fr; }
   .page-heading { display:block; }
+  .admin-page { width:min(100% - 1.5rem,30rem); }
+  .admin-layout { grid-template-columns:1fr; }
+  .account-grid { grid-template-columns:1fr; }
+  .audit-row { grid-template-columns:1fr; gap:.1rem; }
   .detail-hero { grid-template-columns:1fr; }
   .stat-grid { grid-template-columns:1fr; }
 }
