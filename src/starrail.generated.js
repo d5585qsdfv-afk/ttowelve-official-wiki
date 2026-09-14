@@ -1,6 +1,11 @@
 // atwiki「装備/VUND/クラス『StarRail』」および「StarRailVUNDボス(案)」から収録。
 // 一覧掲載の全クラスを収録し、未設定・未実装は推測で補完せず状態を明示する。
-const job = ({ pageId, title, path, weapon = '未設定', summary, image, body, sortOrder, status = '実装済み' }) => ({
+import { starRailSourceBodies } from './starrail.source.generated.js';
+
+const job = ({ pageId, title, path, weapon = '未設定', summary, image, body, sortOrder, status = '実装済み' }) => {
+  const source = starRailSourceBodies[title] || starRailSourceBodies[title.replaceAll('・', '')];
+
+  return ({
   id: `job-starrail-${pageId}`,
   category: 'jobs',
   title,
@@ -11,10 +16,11 @@ const job = ({ pageId, title, path, weapon = '未設定', summary, image, body, 
   tags: ['ジョブ', 'StarRail', path, weapon, status],
   image,
   imageAlt: `${title}のジョブ画像`,
-  body,
+  body: source?.body || body,
   status,
   source: `十の救現主wiki／装備・VUND・クラス「StarRail」${Number.isInteger(pageId) ? `（page ${pageId}）` : '（一覧掲載）'}`,
-});
+  });
+};
 
 export const starRailJobEntries = [
   job({
