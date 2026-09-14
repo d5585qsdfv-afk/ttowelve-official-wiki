@@ -14,10 +14,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Unpack source
-        run: unzip -q ttowelve-project-bootstrap.zip -d .
-      - name: Remove bootstrap archive
-        run: rm -f ttowelve-project-bootstrap.zip
+      - name: Find and unpack source archive
+        run: |
+          archive="$(find . -maxdepth 1 -type f -name 'ttowelve-project-*.zip' -print -quit)"
+          test -n "$archive"
+          unzip -q "$archive" -d .
+          rm -f "$archive"
       - name: Commit source tree
         run: |
           git config user.name 'github-actions[bot]'
