@@ -29,7 +29,6 @@ export function renderPage(config = {}) {
     </button>
     <div class="top-actions">
       <span class="sync" id="syncState"><i></i>同期を確認中</span>
-      <nav class="portal-nav" aria-label="Wikiポータル"><a href="/games/juno">Wikiポータル</a><a href="/account">アカウント</a></nav>
       <button class="icon-button account-button" data-action="open-account" aria-label="ログインと編集提案">♙ <span id="accountButtonLabel">ログイン</span></button>
       <button class="icon-button" data-action="open-editor" aria-label="管理・編集">✦ <span>編集</span></button>
     </div>
@@ -142,7 +141,7 @@ export function renderPage(config = {}) {
       <label><span>タグ</span><input name="tags" maxlength="240" placeholder="ジョブ, 氷属性, 支援"></label>
       <div class="import-box"><button type="button" data-action="paste-ccfolia">ココフォリアのコピーを貼り付け</button><small>駒やパネルからコピーした文章を、詳細情報へ追加します。</small></div>
       <p class="form-message" id="formMessage" role="status"></p>
-      <footer><a class="secondary portal-link" href="/admin/wiki">高度なWiki管理</a><a class="secondary portal-link" href="/admin/assets">画像管理</a><button type="button" class="secondary" data-action="close-editor">キャンセル</button><button type="submit" class="primary">下書きを保存</button></footer>
+      <footer><button type="button" class="secondary" data-action="close-editor">キャンセル</button><button type="submit" class="primary">下書きを保存</button></footer>
     </form>
   </dialog>
 
@@ -160,7 +159,6 @@ export function renderPage(config = {}) {
           <p class="form-message" id="authMessage" role="status"></p>
           <div class="account-actions"><button class="primary" id="authSubmit" type="submit">ログイン</button><button class="secondary" data-action="toggle-auth-mode" type="button">新規登録に切り替え</button></div>
         </form>
-        <nav class="account-portal-links" aria-label="アカウント機能"><a href="/account">アカウント・クラウドセーブ</a><a href="/contributor">編集提案ポータル</a></nav>
       </section>
       <section id="proposalPanel" class="hidden">
         <form id="proposalForm">
