@@ -10,13 +10,11 @@ await writeFile(
 );
 await rm(dist, { recursive: true, force: true });
 await mkdir(resolve(dist, 'server'), { recursive: true });
-await mkdir(resolve(dist, 'out'), { recursive: true });
 await mkdir(resolve(dist, '.openai'), { recursive: true });
 await mkdir(resolve(dist, '.openai', 'drizzle'), { recursive: true });
 await cp(resolve(root, 'src'), resolve(dist, 'server'), { recursive: true });
-await cp(resolve(root, 'public'), resolve(dist, 'out'), { recursive: true });
 // Bundle the existing artwork with the Worker: this host does not supply an
-// automatic static-file binding for dist/out. Never send the HTML fallback for assets.
+// automatic static-file binding. Never send the HTML fallback for assets.
 const assets = {};
 const mediaTypes = { '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml' };
 for (const name of await readdir(resolve(root, 'public', 'assets'))) {
