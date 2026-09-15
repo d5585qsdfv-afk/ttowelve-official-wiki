@@ -21,11 +21,15 @@ assert.match(index, /url\.pathname === '\/api\/save-data'/);
 assert.match(client, /submitWikiProposal/);
 assert.match(client, /togglePinnedEntry/);
 assert.match(client, /toggleFavoriteEntry/);
+assert.match(client, /scheduleArchiveSync/);
+assert.match(client, /pullArchivePreferences/);
+assert.match(client, /setInterval\(\(\)=>/);
 assert.match(bridge, /wiki_edit_proposals/);
 assert.match(bridge, /slug=eq\.juno/);
 assert.match(bridge, /fetch\('\/api\/save-data'/);
 assert.doesNotMatch(bridge, /\/rest\/v1\/save_data|\/rest\/v1\/rpc\/upsert_save_data/);
 assert.doesNotMatch(page + index + client + bridge, /SUPABASE_SERVICE_ROLE_KEY|service_role/i);
+assert.match(page, /お気に入りを自動同期/);
 assert.match(assets, /supabase-bridge\.js/);
 
 console.log('Supabase bridge regression passed: UI, runtime config, proposal boundary, existing favorites, pinning, and secret-key guard are present.');

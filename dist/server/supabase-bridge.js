@@ -137,7 +137,7 @@ export async function saveArchivePreferences(context, data) {
     cache: 'no-store',
   });
   const payload = await response.json().catch(() => null);
-  if (!response.ok) throw apiError(payload, response.status === 409 ? '別の端末で保存されています。「保存先を再読込」で最新状態を確認してください。' : 'クラウド保存に失敗しました。');
+  if (!response.ok) { const error = apiError(payload, response.status === 409 ? '別の端末で保存されています。「保存先を再読込」で最新状態を確認してください。' : 'クラウド保存に失敗しました。'); error.status = response.status; throw error; }
   return { ...context, gameId: payload.gameId || context.gameId, row: payload.row || null };
 }
 
