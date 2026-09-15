@@ -19,7 +19,7 @@ assert.deepEqual(togglePinnedIds(state, 'job-1').ids, ['weapon-1', 'emblem-1', '
 assert.deepEqual(pinnedEntries([{ id: 'emblem-1' }, { id: 'weapon-1' }], state).map(entry => entry.id), ['weapon-1', 'emblem-1']);
 
 for (const marker of [
-  'PINNED_ENTRIES_KEY', 'renderPinnedEntries', 'toggle-pin-entry', 'toggle-pin-current', 'clear-pinned', 'pinnedGrid', 'detailPin', 'MAX_PINNED_ENTRIES',
+  'PINNED_ENTRIES_KEY', 'PINNED_DOCK_KEY', 'PINNED_COLLAPSED_KEY', 'renderPinnedEntries', 'toggle-pin-entry', 'toggle-pin-current', 'toggle-pinned-dock', 'toggle-pinned-collapse', 'clear-pinned', 'pinnedGrid', 'pinnedPanelContent', 'is-docked', 'is-collapsed', 'detailPin', 'MAX_PINNED_ENTRIES',
 ]) assert.match(client + page, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `multi-detail UI marker missing: ${marker}`);
 assert.match(build, /pin-state\.js/, 'pin-state asset is not included in the Worker bundle');
 console.log('Multi-detail regression passed: pin/unpin, four-item limit, ordering, filtering, UI markers, and asset delivery verified.');

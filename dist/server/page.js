@@ -91,9 +91,8 @@ export function renderPage(config = {}) {
       </section>
 
       <section class="pinned-panel" id="pinnedPanel" aria-labelledby="pinnedTitle">
-        <header class="pinned-panel-heading"><div><span class="tag-browser-kicker">COMPARE DESK</span><h2 id="pinnedTitle">固定詳細 <span id="pinnedCount">0/4</span></h2></div><button type="button" class="secondary" data-action="clear-pinned">固定をすべて解除</button></header>
-        <p class="pin-status" id="pinStatus" role="status" aria-live="polite">最大4件まで固定できます。武器やジョブを並べて効果を比較できます。</p>
-        <div class="pinned-grid" id="pinnedGrid"></div>
+        <header class="pinned-panel-heading"><div><span class="tag-browser-kicker">COMPARE DESK</span><h2 id="pinnedTitle">固定詳細 <span id="pinnedCount">0/4</span></h2></div><div class="pinned-panel-actions"><button type="button" class="secondary pinned-view-toggle" data-action="toggle-pinned-dock" aria-pressed="false">画面に追従</button><button type="button" class="secondary pinned-minimize" data-action="toggle-pinned-collapse" aria-expanded="true">最小化</button><button type="button" class="secondary pinned-clear" data-action="clear-pinned">すべて解除</button></div></header>
+        <div class="pinned-panel-content" id="pinnedPanelContent"><p class="pin-status" id="pinStatus" role="status" aria-live="polite">最大4件まで固定できます。武器やジョブを並べて効果を比較できます。</p><div class="pinned-grid" id="pinnedGrid"></div></div>
       </section>
 
       <fieldset class="database-filters hidden" id="cardFilters"><legend>カードを絞り込む</legend><label>レベル<select id="cardLevel"><option value="">すべてのレベル</option></select></label><label>ロール<select id="cardRole"><option value="">すべてのロール</option></select></label><label>チャンネル<select id="cardChannel"><option value="">すべてのチャンネル</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
