@@ -121,26 +121,24 @@ export async function accountAccess() {
 export async function archiveSaveContext() {
   const active = await getSession();
   if (!active?.user?.id) throw new Error('クラウド保存にはログインが必要です。');
-  const games = await request('/rest/v1/games?slug=eq.juno&is_published=eq.true&select=id&limit=1');
-  const gameId = games?.[0]?.id;
-  if (!gameId) throw new Error('ゲームの保存先を取得できません。');
-  const rows = await request('/rest/v1/save_data?game_id=eq.' + encodeURIComponent(gameId) + '&user_id=eq.' + encodeURIComponent(active.user.id) + '&save_key=eq.archive.preferences&select=data,version,updated_at');
-  return { userId: active.user.id, gameId, row: rows?.[0] || null };
+  const response = await fetch('/api/save-data', { headers: await authHeaders(), cache: 'no-store' });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) throw apiError(payload, '保存データを取得できません。');
+  return { userId: payload.userId || active.user.id, gameId: payload.gameId, row: payload.row || null };
 }
 
 export async function saveArchivePreferences(context, data) {
   await getSession();
   if (currentUser()?.id !== context.userId) throw new Error('アカウントが変わりました。保存先を読み直してください。');
-  try {
-    const result = await request('/rest/v1/rpc/upsert_save_data', { method:'POST', body:JSON.stringify({
-      p_game_id:context.gameId, p_save_key:'archive.preferences', p_data:data,
-      p_expected_version:context.row?.version || 0,
-    }) });
-    return { ...context, row: Array.isArray(result) ? result[0] : result };
-  } catch (error) {
-    if (error.message.includes('SAVE_VERSION_CONFLICT')) throw new Error('別の端末で保存されています。「保存先を再読込」で最新状態を確認してください。');
-    throw error;
-  }
+  const response = await fetch('/api/save-data', {
+    method: 'POST',
+    headers: await authHeaders({ 'content-type': 'application/json' }),
+    body: JSON.stringify({ data, expectedVersion: context.row?.version || 0 }),
+    cache: 'no-store',
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) throw apiError(payload, response.status === 409 ? '別の端末で保存されています。「保存先を再読込」で最新状態を確認してください。' : 'クラウド保存に失敗しました。');
+  return { ...context, gameId: payload.gameId || context.gameId, row: payload.row || null };
 }
 
 async function currentRole() {

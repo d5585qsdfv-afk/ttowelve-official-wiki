@@ -239,6 +239,54 @@ async function saveEntry(request, env) {
   return json({ saved: true, entry: normalizedEntry });
 }
 
+function parseArchiveSaveData(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return { error: '保存データの形式を確認してください。' };
+  const limits = { favoriteEntryIds: 1000, favoriteTags: 300, pinnedEntryIds: 20 };
+  const result = { schemaVersion: 1 };
+  for (const key of Object.keys(limits)) {
+    const values = value[key];
+    if (!Array.isArray(values) || values.length > limits[key] || values.some(item => typeof item !== 'string' || item.trim().length === 0 || item.length > 200)) {
+      return { error: `保存データの${key}を確認してください。` };
+    }
+    result[key] = [...new Set(values.map(item => item.trim()))];
+  }
+  return { data: result };
+}
+
+async function archiveSave(request, env) {
+  const user = await authenticatedUser(request, env);
+  if (!user) return json({ error: 'クラウド保存にはログインが必要です。' }, 401);
+  if (user.source !== 'supabase') return json({ error: 'クラウド保存を利用できる接続先がありません。' }, 503);
+  const origin = request.headers.get('origin');
+  if (origin && origin !== new URL(request.url).origin) return json({ error: '送信元を確認できません。' }, 403);
+  const { gameId } = await supabasePages(env, user.accessToken);
+  if (!gameId) return json({ error: 'ゲームの保存先を取得できません。' }, 503);
+  const query = '/rest/v1/save_data?game_id=eq.' + encodeURIComponent(gameId) + '&user_id=eq.' + encodeURIComponent(user.userId) + '&save_key=eq.archive.preferences&select=data,version,updated_at';
+  if (request.method === 'GET') {
+    const result = await supabaseRequest(env, query, { method: 'GET' }, user.accessToken);
+    if (!result?.response.ok || !Array.isArray(result.payload)) return json({ error: '保存データを取得できません。' }, 503);
+    return json({ userId: user.userId, gameId, row: result.payload[0] || null });
+  }
+  if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+  let input;
+  try { input = await request.json(); } catch { return json({ error: '保存データを読み取れません。' }, 400); }
+  const parsed = parseArchiveSaveData(input?.data);
+  if (parsed.error) return json({ error: parsed.error }, 400);
+  const expectedVersion = input?.expectedVersion === undefined || input?.expectedVersion === null ? null : Number(input.expectedVersion);
+  if (expectedVersion !== null && (!Number.isInteger(expectedVersion) || expectedVersion < 0)) return json({ error: '保存データの版を確認してください。' }, 400);
+  const result = await supabaseRequest(env, '/rest/v1/rpc/upsert_save_data', {
+    method: 'POST', headers: { prefer: 'return=representation' },
+    body: JSON.stringify({ p_game_id: gameId, p_save_key: 'archive.preferences', p_data: parsed.data, p_expected_version: expectedVersion }),
+  }, user.accessToken);
+  const message = JSON.stringify(result?.payload || '');
+  if (!result?.response.ok) {
+    if (result?.response.status === 409 || result?.response.status === 400 && message.includes('SAVE_VERSION_CONFLICT')) return json({ conflict: true, error: '別の端末で保存されています。保存先を再読込してください。' }, 409);
+    return json({ error: 'クラウド保存に失敗しました。' }, result?.response.status === 403 ? 403 : 400);
+  }
+  const row = Array.isArray(result.payload) ? result.payload[0] : result.payload;
+  return json({ saved: true, userId: user.userId, gameId, row });
+}
+
 async function handle(request, env) {
   const url = new URL(request.url);
   const asset = Object.hasOwn(assets, url.pathname) ? assets[url.pathname] : null;
@@ -270,6 +318,10 @@ async function handle(request, env) {
   if (url.pathname === '/api/entries' && request.method === 'POST') {
     try { return await saveEntry(request, env); }
     catch { return json({ error: '保存先に接続できません。入力を残したまま再試行できます。' }, 503); }
+  }
+  if (url.pathname === '/api/save-data' && ['GET', 'POST'].includes(request.method)) {
+    try { return await archiveSave(request, env); }
+    catch { return json({ error: 'クラウド保存先に接続できません。' }, 503); }
   }
   if (url.pathname.startsWith('/api/')) return json({ error: 'APIが見つかりません。' }, 404);
   if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });

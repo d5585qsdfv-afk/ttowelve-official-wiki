@@ -11,8 +11,10 @@ let selectedTags=new Set();
 const FAVORITE_TAGS_KEY='ttowelve.favorite-tags';
 const FAVORITE_ENTRIES_KEY='ttowelve.favorite-entries';
 const PINNED_ENTRIES_KEY='ttowelve.pinned-entries';
+const PINNED_DOCK_KEY='ttowelve.pinned-dock';
+const PINNED_COLLAPSED_KEY='ttowelve.pinned-collapsed';
 let favoriteTags=readFavoriteTags();
-let favoriteEntryIds=readFavoriteEntryIds(),pinnedEntryIds=readPinnedEntryIds(),favoriteOnly=false,pinNotice='';
+let favoriteEntryIds=readFavoriteEntryIds(),pinnedEntryIds=readPinnedEntryIds(),favoriteOnly=false,pinNotice='',pinnedDock=readBooleanPreference(PINNED_DOCK_KEY,false),pinnedCollapsed=readBooleanPreference(PINNED_COLLAPSED_KEY,false);
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const labels={all:'収録情報',weapons:'武器種図鑑',weaponItems:'武器図鑑',cards:'カード図鑑',medicines:'薬図鑑',jobs:'ジョブ図鑑',emblems:'紋章図鑑',rings:'リンクリング図鑑',enemies:'敵図鑑＆攻略情報',other:'戦闘・報酬'};
 const vundClasses=['Gamers','Collapse','Adventure','Sun','Mirror','Saver','Reverse','Mixing','StarRail','Genshin','Bright&Story','#Compass'];
@@ -28,6 +30,8 @@ function readFavoriteEntryIds(){try{const value=JSON.parse(localStorage.getItem(
 function saveFavoriteEntryIds(){try{localStorage.setItem(FAVORITE_ENTRIES_KEY,JSON.stringify([...favoriteEntryIds]))}catch{}}
 function readPinnedEntryIds(){try{return normalizePinnedIds(JSON.parse(localStorage.getItem(PINNED_ENTRIES_KEY)||'[]'))}catch{return []}}
 function savePinnedEntryIds(){try{localStorage.setItem(PINNED_ENTRIES_KEY,JSON.stringify(pinnedEntryIds))}catch{}}
+function readBooleanPreference(key,fallback){try{const value=localStorage.getItem(key);return value===null?fallback:value==='1'}catch{return fallback}}
+function saveBooleanPreference(key,value){try{localStorage.setItem(key,value?'1':'0')}catch{}}
 function toggleTag(tag){if(selectedTags.has(tag))selectedTags.delete(tag);else selectedTags.add(tag);render()}
 function toggleFavoriteTag(tag){if(favoriteTags.has(tag))favoriteTags.delete(tag);else favoriteTags.add(tag);saveFavoriteTags();renderTagBrowser()}
 function toggleFavoriteEntry(id){if(!id)return;if(favoriteEntryIds.has(id))favoriteEntryIds.delete(id);else favoriteEntryIds.add(id);saveFavoriteEntryIds();render();updateDetailFavorite()}
@@ -51,6 +55,8 @@ function renderTagBrowser(){
 function renderPinnedEntries(){
   const section=$('#pinnedPanel'),grid=$('#pinnedGrid'),count=$('#pinnedCount'),notice=$('#pinStatus');if(!section||!grid)return;
   const items=pinnedEntries(entries,pinnedEntryIds);count.textContent=`${items.length}/${MAX_PINNED_ENTRIES}`;notice.textContent=pinNotice||`最大${MAX_PINNED_ENTRIES}件まで固定できます。武器やジョブを並べて効果を比較できます。`;
+  section.classList.toggle('is-docked',pinnedDock);section.classList.toggle('is-collapsed',pinnedCollapsed);section.classList.toggle('is-empty',!items.length);
+  const dockButton=section.querySelector('[data-action="toggle-pinned-dock"]'),collapseButton=section.querySelector('[data-action="toggle-pinned-collapse"]');if(dockButton){dockButton.classList.toggle('active',pinnedDock);dockButton.setAttribute('aria-pressed',String(pinnedDock));dockButton.textContent=pinnedDock?'追従中':'画面に追従'}if(collapseButton){collapseButton.setAttribute('aria-expanded',String(!pinnedCollapsed));collapseButton.textContent=pinnedCollapsed?'展開':'最小化'}
   grid.innerHTML=items.length?items.map(entry=>`<article class="pinned-entry" style="--accent:${accents[entry.accent]||accents.lime}"><header><div><span class="pinned-kind">${esc(labels[entry.category]||entry.category)}</span><button type="button" class="pinned-title" data-id="${esc(entry.id)}">${esc(entry.title)}</button><p>${esc(entry.subtitle||'')}</p></div><button type="button" class="pinned-unpin" data-action="toggle-pin-entry" data-entry-id="${esc(entry.id)}" aria-label="${esc(entry.title)}の固定を外す">×</button></header>${entry.summary?`<p class="pinned-summary">${esc(entry.summary)}</p>`:''}<div class="pinned-body">${esc(entry.body||'')}</div><div class="tag-list">${(entry.tags||[]).map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div></article>`).join(''):'<div class="pinned-empty">一覧や詳細画面の「□ 詳細を固定」から、比較したい図鑑を追加してください。</div>';
 }
 function accountMessage(message=''){const node=$('#accountStatus');if(node)node.textContent=message}
@@ -162,7 +168,7 @@ async function openEditor(entry){
   }else{f.elements.id.value='';f.elements.revision.value='0';if(activeCategory!=='all')f.elements.category.value=activeCategory}
   toggleEnemyEditor();$('#editorDialog').showModal();
 }
-async function load(){let synced=false;try{const response=await fetch('/api/entries',{headers:{accept:'application/json'},cache:'no-store'});if(!response.ok)throw new Error();const data=await response.json();if(!Array.isArray(data.entries))throw new Error();if(data.sync!=='unavailable')entries=data.entries.map(prepareEntry);synced=data.sync==='synced';$('#syncState').classList.toggle('error',data.sync==='unavailable');$('#syncState').classList.toggle('ready',synced);$('#syncState').textContent=synced?'クラウド読込済み':data.sync==='local'?'端末用データ':'接続できません・表示内容を保持';}catch{$('#syncState').classList.remove('ready');$('#syncState').classList.add('error');$('#syncState').textContent='接続できません・表示内容を保持'}populateFilters();render();return synced;}
+async function load(){let synced=false;try{const response=await fetch('/api/entries',{headers:{accept:'application/json'},cache:'no-store'});if(!response.ok)throw new Error();const data=await response.json();if(!Array.isArray(data.entries))throw new Error();entries=data.entries.map(prepareEntry);synced=data.sync==='synced';$('#syncState').classList.toggle('error',data.sync==='unavailable');$('#syncState').classList.toggle('ready',synced);$('#syncState').textContent=synced?'クラウド読込済み':data.sync==='local'?'端末用データ':'接続できません・初期データを表示';}catch{$('#syncState').classList.remove('ready');$('#syncState').classList.add('error');$('#syncState').textContent='接続できません・初期データを表示'}populateFilters();render();return synced;}
 document.addEventListener('click',event=>{
   const b=event.target.closest('button');if(!b)return;const action=b.dataset.action;
   if(b.dataset.game==='ten-saviors')showArchive();else if(b.dataset.id)openDetail(b.dataset.id);
@@ -180,6 +186,8 @@ document.addEventListener('click',event=>{
   else if(action==='toggle-favorite-current')toggleFavoriteEntry(currentEntry?.id||'')
   else if(action==='toggle-pin-entry')togglePinnedEntry(b.dataset.entryId||'')
   else if(action==='toggle-pin-current')togglePinnedEntry(currentEntry?.id||'')
+  else if(action==='toggle-pinned-dock'){pinnedDock=!pinnedDock;saveBooleanPreference(PINNED_DOCK_KEY,pinnedDock);renderPinnedEntries()}
+  else if(action==='toggle-pinned-collapse'){pinnedCollapsed=!pinnedCollapsed;saveBooleanPreference(PINNED_COLLAPSED_KEY,pinnedCollapsed);renderPinnedEntries()}
   else if(action==='clear-pinned')clearPinned()
   else if(action==='toggle-favorite-filter')toggleFavoriteFilter()
   else if(action==='clear-tags'){selectedTags.clear();favoriteOnly=false;render()}

@@ -17,11 +17,14 @@ assert.match(page, /proposalForm/);
 assert.match(page, /__SUPABASE_CONFIG__/);
 assert.match(index, /SUPABASE_URL/);
 assert.match(index, /SUPABASE_ANON_KEY/);
+assert.match(index, /url\.pathname === '\/api\/save-data'/);
 assert.match(client, /submitWikiProposal/);
 assert.match(client, /togglePinnedEntry/);
 assert.match(client, /toggleFavoriteEntry/);
 assert.match(bridge, /wiki_edit_proposals/);
 assert.match(bridge, /slug=eq\.juno/);
+assert.match(bridge, /fetch\('\/api\/save-data'/);
+assert.doesNotMatch(bridge, /\/rest\/v1\/save_data|\/rest\/v1\/rpc\/upsert_save_data/);
 assert.doesNotMatch(page + index + client + bridge, /SUPABASE_SERVICE_ROLE_KEY|service_role/i);
 assert.match(assets, /supabase-bridge\.js/);
 
