@@ -259,7 +259,7 @@ async function archiveSave(request, env) {
   if (user.source !== 'supabase') return json({ error: 'クラウド保存を利用できる接続先がありません。' }, 503);
   const origin = request.headers.get('origin');
   if (origin && origin !== new URL(request.url).origin) return json({ error: '送信元を確認できません。' }, 403);
-  const { gameId } = await supabasePages(env, user.accessToken);
+  const gameId = await supabaseGameId(env, user.accessToken);
   if (!gameId) return json({ error: 'ゲームの保存先を取得できません。' }, 503);
   const query = '/rest/v1/save_data?game_id=eq.' + encodeURIComponent(gameId) + '&user_id=eq.' + encodeURIComponent(user.userId) + '&save_key=eq.archive.preferences&select=data,version,updated_at';
   if (request.method === 'GET') {
