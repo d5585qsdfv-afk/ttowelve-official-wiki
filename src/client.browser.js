@@ -87,8 +87,6 @@ function populateProposalEntries(){const select=$('#proposalEntry');if(!select)r
 function updateProposalContent(){const entry=entries.find(item=>item.id===$('#proposalEntry').value);if(!entry)return;$('#proposalContent').value=entry.body||entry.summary||'';$('#proposalTitle').value=entry.title+'の編集提案';$('#proposalSummary').value=''}
 function renderAccount(){
   const configured=isSupabaseConfigured(),session=currentSession();
-  const pinnedLimitSelect=$('#pinnedLimit');if(pinnedLimitSelect){pinnedLimitSelect.innerHTML=PINNED_LIMIT_OPTIONS.map(value=>`<option value="${value}">${value}件</option>`).join('');pinnedLimitSelect.value=String(pinnedLimit)}
-  applyDisplaySize();
   $('#accountButtonLabel').textContent=session?'アカウント':'ログイン';$('#authPanel').classList.toggle('hidden',!!session);$('#signedInPanel').classList.toggle('hidden',!session);$('#proposalPanel').classList.toggle('hidden',!session||!access.canPropose);
  $('#authSubmit').disabled=!configured||accountBusy;$('#authSubmit').textContent=authMode==='signin'?'ログイン':'新規登録';$('[data-action="toggle-auth-mode"]').disabled=!configured||accountBusy;$('[data-action="toggle-auth-mode"]').textContent=authMode==='signin'?'新規登録に切り替え':'ログインに切り替え';$('#authNameField').classList.toggle('hidden',authMode==='signin');$('#authPassword').autocomplete=authMode==='signin'?'current-password':'new-password';$('#proposalSubmit').disabled=accountBusy;$('[data-action="sign-out"]').disabled=cloudBusy||accountBusy;
  if(access.canPropose&&!$('#proposalEntry').options.length)populateProposalEntries();
@@ -96,8 +94,13 @@ function renderAccount(){
  $$('[data-action="open-editor"],[data-action="edit-current"]').forEach(button=>button.classList.toggle('hidden',!access.canEdit));
  $$('[data-action^="cloud-"]').forEach(button=>button.disabled=cloudBusy||(button.dataset.action!=='cloud-load'&&!cloudContext)||(button.dataset.action==='cloud-restore'&&!cloudContext?.row));
 }
+function renderSettings(){
+  const pinnedLimitSelect=$('#pinnedLimit');if(pinnedLimitSelect){pinnedLimitSelect.innerHTML=PINNED_LIMIT_OPTIONS.map(value=>`<option value="${value}">${value}件</option>`).join('');pinnedLimitSelect.value=String(pinnedLimit)}
+  applyDisplaySize();
+}
 async function refreshAccess(){const request=++accessRequest;try{const result=await accountAccess();if(request!==accessRequest)return;access=result;renderAccount()}catch(error){if(request!==accessRequest)return;access={canEdit:false,canPropose:false};renderAccount();accountMessage(error.message)}}
 function openAccount(){renderAccount();if(!$('#accountDialog').open)$('#accountDialog').showModal();void refreshAccess()}
+function openSettings(){renderSettings();if(!$('#settingsDialog').open)$('#settingsDialog').showModal()}
 async function cloudAction(action){if(cloudBusy)return;cloudBusy=true;renderAccount();const status=$('#cloudStatus');status.textContent='保存先に接続しています…';try{
  if(action==='cloud-load'){cloudContext=await pullArchivePreferences(true);status.textContent=cloudContext?.row?'クラウドの最新状態を取得しました。変更は自動保存されます。':'まだ保存されていません。この端末の内容は変更時に自動保存されます。'}
  else if(!cloudContext||cloudContext.userId!==currentUser()?.id)throw new Error('保存先を読み直してください。');
@@ -196,7 +199,7 @@ document.addEventListener('click',event=>{
   const b=event.target.closest('button');if(!b)return;const action=b.dataset.action;
   if(b.dataset.game==='ten-saviors')showArchive();else if(b.dataset.id)openDetail(b.dataset.id);
   else if(b.dataset.category){activeCategory=b.dataset.category;$$('.category').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b))});render()}
-  else if(action==='home')showHome();else if(action==='open-editor')openEditor();else if(action==='open-account')openAccount();else if(action==='close-detail')$('#detailDialog').close();else if(action==='close-editor')$('#editorDialog').close();else if(action==='close-account')$('#accountDialog').close();
+  else if(action==='home')showHome();else if(action==='open-editor')openEditor();else if(action==='open-settings')openSettings();else if(action==='open-account')openAccount();else if(action==='close-detail')$('#detailDialog').close();else if(action==='close-editor')$('#editorDialog').close();else if(action==='close-settings')$('#settingsDialog').close();else if(action==='close-account')$('#accountDialog').close();
   else if(action==='toggle-auth-mode'){authMode=authMode==='signin'?'signup':'signin';authMessage('');renderAccount()}
   else if(action==='sign-out'){void signOut().catch(()=>{}).finally(()=>{accessRequest++;access={canEdit:false,canPropose:false};if(archiveSyncTimer)clearTimeout(archiveSyncTimer);archiveSyncDirty=false;lastSyncedArchive=null;cloudContext=null;$('#proposalForm').reset();$('#proposalEntry').innerHTML='';$('#cloudStatus').textContent='ログインすると自動同期が再開します。';renderAccount();accountMessage('この端末からログアウトしました。')})}
  else if(action?.startsWith('cloud-'))void cloudAction(action);
@@ -223,7 +226,7 @@ $('#authForm').addEventListener('submit',handleAuthSubmit);$('#proposalForm').ad
 filterFields.forEach(([selector])=>$(selector).addEventListener('change',render));
  [...cardFilterFields,...medicineFilterFields,...jobFilterFields].forEach(selector=>$(selector).addEventListener('change',render));
 $('#editorForm').elements.category.addEventListener('change',toggleEnemyEditor);
-for(const selector of ['#detailDialog','#editorDialog','#accountDialog'])$(selector).addEventListener('click',event=>{if(event.target===$(selector))$(selector).close()});
+for(const selector of ['#detailDialog','#editorDialog','#accountDialog','#settingsDialog'])$(selector).addEventListener('click',event=>{if(event.target===$(selector))$(selector).close()});
 $('#editorForm').addEventListener('submit',async event=>{
   event.preventDefault();const f=event.currentTarget,fd=new FormData(f),body={id:fd.get('id')||undefined,revision:Number(fd.get('revision')||0),game:'ten-saviors',category:fd.get('category'),accent:fd.get('accent'),title:fd.get('title'),subtitle:fd.get('subtitle'),summary:fd.get('summary'),body:fd.get('body'),tags:String(fd.get('tags')||'').split(/[,、]/).map(x=>x.trim()).filter(Boolean)};
   if(body.category==='enemies'){body.enemyClass=fd.get('enemyClass');body.enemyChapter=fd.get('enemyChapter');body.enemyLocation=fd.get('enemyLocation');body.body=updateEnemyBody(body.body,{classification:body.enemyClass,chapter:body.enemyChapter,location:body.enemyLocation})}
@@ -240,4 +243,4 @@ $$('img').forEach(image=>{image.addEventListener('error',()=>markImageFailure(im
 window.addEventListener('archive-auth-changed',()=>{cloudContext=null;archiveSyncDirty=false;lastSyncedArchive=null;access={canEdit:false,canPropose:false};renderAccount();void refreshAccess();void pullArchivePreferences(true).catch(error=>archiveStatus(error.message||'クラウドと同期できませんでした。'))});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&currentSession()?.access_token)void pullArchivePreferences().catch(()=>{})});
 setInterval(()=>{if(!document.hidden&&currentSession()?.access_token&&!archiveSyncDirty&&!archiveSyncInFlight)void pullArchivePreferences().catch(()=>{})},30000);
-applyDisplaySize();renderAccount();void refreshAccess();if(currentSession()?.access_token)void pullArchivePreferences(true).catch(error=>archiveStatus(error.message||'クラウドと同期できませんでした。'));populateFilters();render();load();
+renderSettings();renderAccount();void refreshAccess();if(currentSession()?.access_token)void pullArchivePreferences(true).catch(error=>archiveStatus(error.message||'クラウドと同期できませんでした。'));populateFilters();render();load();
