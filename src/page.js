@@ -183,7 +183,9 @@ export function renderPage(config = {}) {
       <section class="preference-panel" aria-label="表示設定">
         <label><span>固定できる最大数</span><select id="pinnedLimit"><option value="2">2件</option><option value="4" selected>4件</option><option value="6">6件</option><option value="8">8件</option></select></label>
         <label><span>画面の表示サイズ</span><select id="displaySize"><option value="small">小（90%）</option><option value="standard" selected>標準（100%）</option><option value="large">大（115%）</option></select></label>
-        <p class="preference-note">設定はこのブラウザーに保存されます。固定数を減らすと、上限を超えた固定項目は解除されます。</p>
+        <label class="range-setting"><span>固定枠の横幅 <output id="pinnedWidthValue" for="pinnedWidth">480px</output></span><input id="pinnedWidth" type="range" min="280" max="720" step="20" value="480"></label>
+        <label class="range-setting"><span>固定枠の高さ <output id="pinnedHeightValue" for="pinnedHeight">560px</output></span><input id="pinnedHeight" type="range" min="240" max="760" step="20" value="560"></label>
+        <p class="preference-note">設定はこのブラウザーに保存されます。固定数を減らすと、上限を超えた固定項目は解除されます。固定枠の横幅と高さは「画面に追従」中の表示に反映され、スマホでは画面幅に収まるよう自動調整されます。</p>
       </section>
     </article>
   </dialog>

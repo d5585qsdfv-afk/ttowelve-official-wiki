@@ -15,8 +15,12 @@ const PINNED_DOCK_KEY='ttowelve.pinned-dock';
 const PINNED_COLLAPSED_KEY='ttowelve.pinned-collapsed';
 const PINNED_LIMIT_KEY='ttowelve.pinned-limit';
 const DISPLAY_SIZE_KEY='ttowelve.display-size';
+const PINNED_WIDTH_KEY='ttowelve.pinned-width';
+const PINNED_HEIGHT_KEY='ttowelve.pinned-height';
+const PINNED_WIDTH_RANGE={min:280,max:720,step:20,default:480};
+const PINNED_HEIGHT_RANGE={min:240,max:760,step:20,default:560};
 let favoriteTags=readFavoriteTags();
-let pinnedLimit=readPinnedLimit(),displaySize=readDisplaySize();
+let pinnedLimit=readPinnedLimit(),displaySize=readDisplaySize(),pinnedWidth=readPinnedWidth(),pinnedHeight=readPinnedHeight();
 let favoriteEntryIds=readFavoriteEntryIds(),pinnedEntryIds=readPinnedEntryIds(),favoriteOnly=false,pinNotice='',pinnedDock=readBooleanPreference(PINNED_DOCK_KEY,false),pinnedCollapsed=readBooleanPreference(PINNED_COLLAPSED_KEY,false);
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const labels={all:'収録情報',weapons:'武器種図鑑',weaponItems:'武器図鑑',cards:'カード図鑑',medicines:'薬図鑑',jobs:'ジョブ図鑑',emblems:'紋章図鑑',rings:'リンクリング図鑑',enemies:'敵図鑑＆攻略情報',other:'戦闘・報酬'};
@@ -37,6 +41,11 @@ function readPinnedLimit(){try{return normalizePinnedLimit(localStorage.getItem(
 function savePinnedLimit(){try{localStorage.setItem(PINNED_LIMIT_KEY,String(pinnedLimit))}catch{}}
 function readDisplaySize(){try{const value=localStorage.getItem(DISPLAY_SIZE_KEY);return ['small','standard','large'].includes(value)?value:'standard'}catch{return 'standard'}}
 function saveDisplaySize(){try{localStorage.setItem(DISPLAY_SIZE_KEY,displaySize)}catch{}}
+function normalizePinnedDimension(value,range){const numeric=Number(value);if(!Number.isFinite(numeric))return range.default;const stepped=range.min+Math.round((numeric-range.min)/range.step)*range.step;return Math.min(range.max,Math.max(range.min,stepped))}
+function readPinnedWidth(){try{return normalizePinnedDimension(localStorage.getItem(PINNED_WIDTH_KEY),PINNED_WIDTH_RANGE)}catch{return PINNED_WIDTH_RANGE.default}}
+function savePinnedWidth(){try{localStorage.setItem(PINNED_WIDTH_KEY,String(pinnedWidth))}catch{}}
+function readPinnedHeight(){try{return normalizePinnedDimension(localStorage.getItem(PINNED_HEIGHT_KEY),PINNED_HEIGHT_RANGE)}catch{return PINNED_HEIGHT_RANGE.default}}
+function savePinnedHeight(){try{localStorage.setItem(PINNED_HEIGHT_KEY,String(pinnedHeight))}catch{}}
 function readBooleanPreference(key,fallback){try{const value=localStorage.getItem(key);return value===null?fallback:value==='1'}catch{return fallback}}
 function saveBooleanPreference(key,value){try{localStorage.setItem(key,value?'1':'0')}catch{}}
 function archiveSnapshot(){return {schemaVersion:1,favoriteEntryIds:[...favoriteEntryIds],favoriteTags:[...favoriteTags],pinnedEntryIds:[...pinnedEntryIds]}}
@@ -57,6 +66,9 @@ function toggleFavoriteEntry(id){if(!id)return;if(favoriteEntryIds.has(id))favor
 function togglePinnedEntry(id){const result=togglePinnedIds(pinnedEntryIds,id,pinnedLimit);if(!result.changed){pinNotice=result.reason==='limit'?`同時表示できる詳細は最大${pinnedLimit}件です。固定を外してから追加してください。`:'';render();return}pinnedEntryIds=result.ids;pinNotice='';savePinnedEntryIds();render();updateDetailControls();scheduleArchiveSync()}
 function setPinnedLimit(value){const next=normalizePinnedLimit(value,pinnedLimit);if(next===pinnedLimit)return;pinnedLimit=next;const previousCount=pinnedEntryIds.length;pinnedEntryIds=normalizePinnedIds(pinnedEntryIds,pinnedLimit);savePinnedLimit();savePinnedEntryIds();pinNotice=previousCount>pinnedEntryIds.length?`固定上限を${pinnedLimit}件に変更したため、${previousCount-pinnedEntryIds.length}件を固定から外しました。`:'';render();updateDetailControls();scheduleArchiveSync()}
 function applyDisplaySize(){document.documentElement.dataset.displaySize=displaySize;const select=$('#displaySize');if(select)select.value=displaySize}
+function applyPinnedPanelSize(){document.documentElement.style.setProperty('--pinned-panel-width',`${pinnedWidth}px`);document.documentElement.style.setProperty('--pinned-panel-height',`${pinnedHeight}px`);const widthValue=$('#pinnedWidthValue'),heightValue=$('#pinnedHeightValue');if(widthValue)widthValue.textContent=`${pinnedWidth}px`;if(heightValue)heightValue.textContent=`${pinnedHeight}px`;const width=$('#pinnedWidth'),height=$('#pinnedHeight');if(width)width.value=String(pinnedWidth);if(height)height.value=String(pinnedHeight)}
+function setPinnedWidth(value){const next=normalizePinnedDimension(value,PINNED_WIDTH_RANGE);if(next===pinnedWidth){applyPinnedPanelSize();return}pinnedWidth=next;savePinnedWidth();applyPinnedPanelSize();renderPinnedEntries()}
+function setPinnedHeight(value){const next=normalizePinnedDimension(value,PINNED_HEIGHT_RANGE);if(next===pinnedHeight){applyPinnedPanelSize();return}pinnedHeight=next;savePinnedHeight();applyPinnedPanelSize();renderPinnedEntries()}
 function clearPinned(){pinnedEntryIds=[];pinNotice='';savePinnedEntryIds();render();updateDetailControls();scheduleArchiveSync()}
 function toggleFavoriteFilter(){favoriteOnly=!favoriteOnly;render()}
 function updateDetailControls(){if(!currentEntry)return;const favoriteButton=$('#detailFavorite'),pinButton=$('#detailPin'),favorite=favoriteEntryIds.has(currentEntry.id),pinned=pinnedEntryIds.includes(currentEntry.id);if(favoriteButton){favoriteButton.classList.toggle('active',favorite);favoriteButton.setAttribute('aria-pressed',String(favorite));favoriteButton.textContent=favorite?'★ お気に入り登録済み':'☆ お気に入りに追加'}if(pinButton){pinButton.classList.toggle('active',pinned);pinButton.setAttribute('aria-pressed',String(pinned));pinButton.textContent=pinned?'▣ 固定を外す':'□ 詳細を固定'}}
@@ -75,6 +87,7 @@ function renderTagBrowser(){
 }
 function renderPinnedEntries(){
   const section=$('#pinnedPanel'),grid=$('#pinnedGrid'),count=$('#pinnedCount'),notice=$('#pinStatus');if(!section||!grid)return;
+  applyPinnedPanelSize();
   const items=pinnedEntries(entries,pinnedEntryIds,pinnedLimit);count.textContent=`${items.length}/${pinnedLimit}`;notice.textContent=pinNotice||`最大${pinnedLimit}件まで固定できます。武器やジョブを並べて効果を比較できます。`;
   section.classList.toggle('is-docked',pinnedDock);section.classList.toggle('is-collapsed',pinnedCollapsed);section.classList.toggle('is-empty',!items.length);
   const dockButton=section.querySelector('[data-action="toggle-pinned-dock"]'),collapseButton=section.querySelector('[data-action="toggle-pinned-collapse"]');if(dockButton){dockButton.classList.toggle('active',pinnedDock);dockButton.setAttribute('aria-pressed',String(pinnedDock));dockButton.textContent=pinnedDock?'追従中':'画面に追従'}if(collapseButton){collapseButton.setAttribute('aria-expanded',String(!pinnedCollapsed));collapseButton.textContent=pinnedCollapsed?'展開':'最小化'}
@@ -96,6 +109,7 @@ function renderAccount(){
 }
 function renderSettings(){
   const pinnedLimitSelect=$('#pinnedLimit');if(pinnedLimitSelect){pinnedLimitSelect.innerHTML=PINNED_LIMIT_OPTIONS.map(value=>`<option value="${value}">${value}件</option>`).join('');pinnedLimitSelect.value=String(pinnedLimit)}
+  applyPinnedPanelSize();
   applyDisplaySize();
 }
 async function refreshAccess(){const request=++accessRequest;try{const result=await accountAccess();if(request!==accessRequest)return;access=result;renderAccount()}catch(error){if(request!==accessRequest)return;access={canEdit:false,canPropose:false};renderAccount();accountMessage(error.message)}}
@@ -221,7 +235,7 @@ document.addEventListener('click',event=>{
   else if(action==='reset-database-filters'){[...cardFilterFields,...medicineFilterFields,...jobFilterFields].forEach(selector=>$(selector).value='');$('#search').value='';selectedTags.clear();render()}
   else if(action==='paste-ccfolia')navigator.clipboard.readText().then(text=>{const area=$('#editorForm').elements.body;area.value+=(area.value?'\n':'')+text;$('#formMessage').textContent='クリップボードの文章を追加しました。'}).catch(()=>$('#formMessage').textContent='詳細欄へ直接貼り付けてください。');
 });
-$('#search').addEventListener('input',render);$('#tagSearch').addEventListener('input',renderTagBrowser);$('#sort').addEventListener('change',render);$('#pinnedLimit').addEventListener('change',event=>setPinnedLimit(event.target.value));$('#displaySize').addEventListener('change',event=>{displaySize=['small','standard','large'].includes(event.target.value)?event.target.value:'standard';saveDisplaySize();applyDisplaySize()});
+$('#search').addEventListener('input',render);$('#tagSearch').addEventListener('input',renderTagBrowser);$('#sort').addEventListener('change',render);$('#pinnedLimit').addEventListener('change',event=>setPinnedLimit(event.target.value));$('#displaySize').addEventListener('change',event=>{displaySize=['small','standard','large'].includes(event.target.value)?event.target.value:'standard';saveDisplaySize();applyDisplaySize()});$('#pinnedWidth').addEventListener('input',event=>setPinnedWidth(event.target.value));$('#pinnedHeight').addEventListener('input',event=>setPinnedHeight(event.target.value));
 $('#authForm').addEventListener('submit',handleAuthSubmit);$('#proposalForm').addEventListener('submit',handleProposalSubmit);$('#proposalEntry').addEventListener('change',updateProposalContent);
 filterFields.forEach(([selector])=>$(selector).addEventListener('change',render));
  [...cardFilterFields,...medicineFilterFields,...jobFilterFields].forEach(selector=>$(selector).addEventListener('change',render));
