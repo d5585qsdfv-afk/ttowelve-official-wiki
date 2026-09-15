@@ -30,7 +30,7 @@ export function renderPage(config = {}) {
     </button>
     <div class="top-actions">
       <span class="sync" id="syncState" role="status"><i></i>同期を確認中</span><button type="button" class="secondary" data-action="reload-entries" aria-label="保存済みの図鑑を再読込">再読込</button>
-      <button class="icon-button account-button" data-action="open-account" aria-label="アカウントとクラウド保存">♙ <span id="accountButtonLabel">ログイン</span></button>
+      <button class="icon-button account-button" data-action="open-account" aria-label="アカウントと表示設定">♙ <span id="accountButtonLabel">ログイン</span></button>
       <button class="icon-button" data-action="open-editor" aria-label="管理・編集">✦ <span>編集</span></button>
     </div>
   </header>
@@ -92,8 +92,8 @@ export function renderPage(config = {}) {
       </section>
 
       <section class="pinned-panel" id="pinnedPanel" aria-labelledby="pinnedTitle">
-        <header class="pinned-panel-heading"><div><span class="tag-browser-kicker">COMPARE DESK</span><h2 id="pinnedTitle">固定詳細 <span id="pinnedCount">0/4</span></h2></div><div class="pinned-panel-actions"><button type="button" class="secondary pinned-view-toggle" data-action="toggle-pinned-dock" aria-pressed="false">画面に追従</button><button type="button" class="secondary pinned-minimize" data-action="toggle-pinned-collapse" aria-expanded="true">最小化</button><button type="button" class="secondary pinned-clear" data-action="clear-pinned">すべて解除</button></div></header>
-        <div class="pinned-panel-content" id="pinnedPanelContent"><p class="pin-status" id="pinStatus" role="status" aria-live="polite">最大4件まで固定できます。武器やジョブを並べて効果を比較できます。</p><div class="pinned-grid" id="pinnedGrid"></div></div>
+        <header class="pinned-panel-heading"><div><span class="tag-browser-kicker">COMPARE DESK</span><h2 id="pinnedTitle">固定詳細 <span id="pinnedCount">0</span></h2></div><div class="pinned-panel-actions"><button type="button" class="secondary pinned-view-toggle" data-action="toggle-pinned-dock" aria-pressed="false">画面に追従</button><button type="button" class="secondary pinned-minimize" data-action="toggle-pinned-collapse" aria-expanded="true">最小化</button><button type="button" class="secondary pinned-clear" data-action="clear-pinned">すべて解除</button></div></header>
+        <div class="pinned-panel-content" id="pinnedPanelContent"><p class="pin-status" id="pinStatus" role="status" aria-live="polite">固定できる件数は表示設定から変更できます。武器やジョブを並べて効果を比較できます。</p><div class="pinned-grid" id="pinnedGrid"></div></div>
       </section>
 
       <fieldset class="database-filters hidden" id="cardFilters"><legend>カードを絞り込む</legend><label>レベル<select id="cardLevel"><option value="">すべてのレベル</option></select></label><label>ロール<select id="cardRole"><option value="">すべてのロール</option></select></label><label>チャンネル<select id="cardChannel"><option value="">すべてのチャンネル</option></select></label><button type="button" class="secondary" data-action="reset-database-filters">条件を解除</button></fieldset>
@@ -149,8 +149,14 @@ export function renderPage(config = {}) {
     <article class="account-card">
       <button class="close" data-action="close-account" aria-label="アカウント画面を閉じる">×</button>
       <div class="eyebrow">PLAYER ACCOUNT</div>
-      <h2 id="accountHeading">アカウントとクラウド保存</h2>
+      <h2 id="accountHeading">アカウントと表示設定</h2>
       <p class="account-lead" id="accountStatus" role="status" aria-live="polite">ログインすると、編集提案を送れます。</p>
+      <section class="preference-panel" aria-labelledby="preferenceTitle">
+        <div class="preference-heading"><div><span class="tag-browser-kicker">DISPLAY SETTINGS</span><h3 id="preferenceTitle">表示設定</h3></div></div>
+        <label><span>固定できる最大数</span><select id="pinnedLimit"><option value="2">2件</option><option value="4" selected>4件</option><option value="6">6件</option><option value="8">8件</option></select></label>
+        <label><span>画面の表示サイズ</span><select id="displaySize"><option value="small">小（90%）</option><option value="standard" selected>標準（100%）</option><option value="large">大（115%）</option></select></label>
+        <p class="preference-note">設定はこのブラウザーに保存されます。固定数を減らすと、上限を超えた固定項目は解除されます。</p>
+      </section>
       <section id="authPanel">
         <form id="authForm">
           <label><span>メールアドレス</span><input id="authEmail" type="email" autocomplete="email" required></label>
